@@ -12,7 +12,7 @@ sudo a2enmod ssl
 sudo a2ensite default-ssl
 ```
 
-* Add this line to /etc/apache2/sites-available/default-ssl.conf:
+* Add this line to `/etc/apache2/sites-available/default-ssl.conf`:
 ```
 SSLCertificateFile /etc/ssl/certs/frap_csail_mit_edu_cert.cer
 ```
@@ -49,8 +49,8 @@ sudo apt-get install libapache2-mod-fastcgi
 
 * Again in the `default-ssl` config, set up a FastCGI server, substituting paths as appropriate:
 ```
-ScriptAliasMatch ^/.*$ /home/adamc/git/frap/testing.exe
-FastCgiServer /home/adamc/git/frap/testing.exe -idle-timeout 120
+ScriptAliasMatch ^/.*$ /home/adamc/git/frapapp/testing.exe
+FastCgiServer /home/adamc/git/frapapp/testing.exe -idle-timeout 120
 ```
 
 * If any funny business pops up about access control, add this to the same virtual host config:
