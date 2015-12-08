@@ -76,8 +76,8 @@ fun main () =
       <h3>The Coq proof assistant</h3>
 
       <ul>
-        <li><a href="https://coq.inria.fr/distrib/current/refman/">Coq reference manual</a></li>
-        <li><a href="https://coq.inria.fr/distrib/current/stdlib/">Coq standard-library reference</a></li>
+        <!--li><a href="https://coq.inria.fr/distrib/current/refman/">Coq reference manual</a></li>
+        <li><a href="https://coq.inria.fr/distrib/current/stdlib/">Coq standard-library reference</a></li-->
         <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
         <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
       </ul>
