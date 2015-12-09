@@ -12,5 +12,7 @@ allow url https://www.cis.upenn.edu/~bcpierce/tapl/
 allow url https://mitpress.mit.edu/books/formal-semantics-programming-languages
 allow url https://coq.inria.fr/distrib/current/refman/
 allow url https://coq.inria.fr/distrib/current/stdlib/
+allow url http://www.cis.upenn.edu/~bcpierce/sf/
+allow url http://www.amazon.com/Practical-Foundations-Programming-Languages-Professor/dp/1107029570
 
 app
