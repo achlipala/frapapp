@@ -15,6 +15,7 @@ fun main () =
       <table class="bs3-table table-striped">
         <tr> <th>Subject number:</th> <td>6.887</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="http://people.csail.mit.edu/wangpeng/">Peng Wang</a></td> </tr>
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 34-304</td> </tr>
       </table>
 

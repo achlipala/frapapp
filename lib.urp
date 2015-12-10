@@ -3,6 +3,7 @@ rewrite relation App/*
 rewrite url App/*
 file /style.css style.css
 allow url http://adam.chlipala.net/
+allow url http://people.csail.mit.edu/wangpeng/
 allow url http://stellar.mit.edu/S/course/6/fa15/6.820/
 allow url https://github.com/achlipala/frapapp
 allow url http://coq.inria.fr/
