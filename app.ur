@@ -1,5 +1,8 @@
 open Bootstrap3
 structure Theme = Ui.Make(Style)
+structure ThisTerm = Spring2016
+val calBounds = {FromDay = ThisTerm.regDay,
+                 ToDay = ThisTerm.classesDone}
 
 table user : { MitId : string, UserName : string, IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool }
   PRIMARY KEY MitId,
@@ -7,6 +10,17 @@ table user : { MitId : string, UserName : string, IsInstructor : bool, IsTA : bo
 
 table possibleOfficeHoursTime : { Time : time }
   PRIMARY KEY Time
+
+table lecture : { LectureNum : int, LectureTitle : string, When : time, Description : string }
+  PRIMARY KEY LectureNum,
+  CONSTRAINT When UNIQUE When
+
+table lab : { LabNum : int, When : time, Description : string }
+  PRIMARY KEY LabNum,
+  CONSTRAINT When UNIQUE When
+
+table officeHours : { OhUser : string, When : time }
+  PRIMARY KEY When
 
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
@@ -39,6 +53,12 @@ val whoami' = s <- Auth.whoamiWithMasquerade;
 val gInstructor = make [#IsInstructor] ()
 val amInstructor = Auth.inGroup gInstructor
 val requireInstructor = Auth.requireGroup gInstructor
+val instructorOnly =
+    b <- amInstructor;
+    return (if b then
+                Calendar.Write
+            else
+                Calendar.Read)
 
 val gStudent = make [#IsStudent] ()
 val gsStudent = (gInstructor, gStudent)
@@ -157,9 +177,6 @@ val courseInfo =
 val usernameShow = mkShow (fn {UserName = s} => s)
 val timeShow = mkShow (fn {Time = t : time} => show t)
 
-val main =
-    Theme.simple "MIT 6.887, Spring 2016" courseInfo
-
 structure Smu = Sm.MakeUi(struct
                               val steps = {BeforeSemester = {Label = "Before semester",
                                                              WhenEntered = fn _ => return ()},
@@ -167,11 +184,122 @@ structure Smu = Sm.MakeUi(struct
                                                                       WhenEntered = fn _ => return ()},
                                            SteadyState = {Label = "Steady state",
                                                           WhenEntered = fn _ => return ()},
-                                           AssigningFinalGrades = {Label = "Assigning Final Grades",
+                                           AssigningFinalGrades = {Label = "Assigning final grades",
                                                                    WhenEntered = fn _ => return ()},
                                            SemesterOver = {Label = "Semester over",
                                                            WhenEntered = fn _ => return ()}}
                           end)
+
+fun getLecture num =
+    oneRow1 (SELECT lecture.LectureTitle, lecture.Description, lecture.When
+             FROM lecture
+             WHERE lecture.LectureNum = {[num]})
+
+val showLecture = mkShow (fn {LectureNum = n : int, LectureTitle = s} => "Lecture " ^ show n ^ ": " ^ s)
+
+structure LectureCal = Calendar.FromTable(struct
+                                              con tag = #Lecture
+                                              con key = [LectureNum = _, LectureTitle = _]
+                                              con times = [When]
+                                              val tab = lecture
+                                              val title = "Lecture"
+                                              val labels = {LectureNum = "Lecture#",
+                                                            LectureTitle = "Title",
+                                                            Description = "Description",
+                                                            When = "When"}
+                                              val kinds = {When = ""}
+                                              val ws = {Description = Widget.htmlbox} ++ _
+                                              val display = Some (fn ctx r =>
+                                                                     content <- source <xml/>;
+                                                                     lec <- rpc (getLecture r.LectureNum);
+                                                                     set content (Ui.simpleModal
+                                                                                      <xml>
+                                                                                        <h2>Lecture #{[r.LectureNum]}: {[lec.LectureTitle]}</h2>
+                                                                                        <h3>{[lec.When]}</h3>
+                                                                      
+                                                                                        {Widget.html lec.Description}
+                                                                                      </xml>
+                                                                                      <xml>Close</xml>);
+                                                                     return <xml>
+                                                                       <dyn signal={signal content}/>
+                                                                     </xml>)
+
+                                              val auth = instructorOnly
+                                              val showTime = True
+                                          end)
+
+fun getLab num =
+    oneRow1 (SELECT lab.Description, lab.When
+             FROM lab
+             WHERE lab.LabNum = {[num]})
+
+val showLab = mkShow (fn {LabNum = n : int} => "Lab " ^ show n)
+
+structure LabCal = Calendar.FromTable(struct
+                                          con tag = #Lab
+                                          con key = [LabNum = _]
+                                          con times = [When]
+                                          val tab = lab
+                                          val title = "Lab"
+                                          val labels = {LabNum = "Lab#",
+                                                        Description = "Description",
+                                                        When = "When"}
+                                          val kinds = {When = ""}
+                                          val ws = {Description = Widget.htmlbox} ++ _
+                                          val display = Some (fn ctx r =>
+                                                                 content <- source <xml/>;
+                                                                 lb <- rpc (getLab r.LabNum);
+                                                                 set content (Ui.simpleModal
+                                                                                  <xml>
+                                                                                    <h2>Lab #{[r.LabNum]}</h2>
+                                                                                    <h3>{[lb.When]}</h3>
+                                                                                    
+                                                                                    {Widget.html lb.Description}
+                                                                                  </xml>
+                                                                                  <xml>Close</xml>);
+                                                                 return <xml>
+                                                                   <dyn signal={signal content}/>
+                                                                 </xml>)
+
+                                          val auth = instructorOnly
+                                          val showTime = True
+                                      end)
+
+val showOh = mkShow (fn {OhUser = s} => s ^ "'s office hours")
+
+structure OhCal = Calendar.FromTable(struct
+                                          con tag = #OfficeHours
+                                          con key = [OhUser = _]
+                                          con times = [When]
+                                          val tab = officeHours
+                                          val title = "Office Hours"
+                                          val labels = {OhUser = "Who",
+                                                        When = "When"}
+                                          val kinds = {When = ""}
+                                          val display = None
+
+                                          val auth = instructorOnly
+                                          val showTime = True
+
+                                          val ws = {OhUser = Widget.foreignbox_default
+                                                                 (SELECT (user.UserName)
+                                                                  FROM user
+                                                                  WHERE user.IsInstructor OR user.IsTA)
+                                                                 ""} ++ _
+                                      end)
+
+structure PublicCal = Calendar.Make(struct
+                                        val t = ThisTerm.cal
+                                                    |> Calendar.compose OhCal.cal
+                                                    |> Calendar.compose LabCal.cal
+                                                    |> Calendar.compose LectureCal.cal
+                                    end)
+
+val calUi = Ui.seq (Ui.h4 <xml>
+  Lecture and lab are in 34-304.<br/>
+  Adam's office hours are in 32-G842.<br/>
+  Peng's office hours are in TBD.
+</xml>, PublicCal.ui calBounds)
 
 structure Private = struct
 
@@ -232,7 +360,16 @@ structure Private = struct
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
          (Some "Course Info",
-          courseInfo))
+          courseInfo),
+         (Some "Calendar",
+          calUi))
+
+    structure AdminCal = Calendar.Make(struct
+                                           val t = ThisTerm.cal
+                                                       |> Calendar.compose OhCal.cal
+                                                       |> Calendar.compose LabCal.cal
+                                                       |> Calendar.compose LectureCal.cal
+                                       end)
 
     val admin =
         requireInstructor;
@@ -250,6 +387,8 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
+                      (Some "Calendar",
+                       AdminCal.ui calBounds),
                       (Some "Users",
                        EditUser.ui),
                       (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
@@ -263,6 +402,22 @@ structure Private = struct
                        </xml>))
 
 end
+
+val main =
+    st <- Sm.current;
+
+    Theme.tabbed "MIT 6.887, Spring 2016"
+                 ((Some "Course Info",
+                   Ui.seq (Ui.const (if st = make [#BeforeSemester] () then
+                                         <xml></xml>
+                                     else
+                                         <xml><p>
+                                           <a class="btn btn-primary btn-lg" link={Private.student ""}>Go to student portal</a>
+                                           (requires an <a href="https://ist.mit.edu/certificates">MIT client certificate</a>)
+                                         </p></xml>),
+                           courseInfo)),
+                  (Some "Calendar",
+                   calUi))
 
 val index = return <xml><body>
   <a link={main}>Main</a>

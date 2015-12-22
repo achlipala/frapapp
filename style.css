@@ -5,3 +5,41 @@
 .LinearStateMachine_label {
     text-align: center
 }
+
+table.Calendar_calendar {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+table.Calendar_calendar tr td {
+    border-style: solid;
+    width: 14%;
+    height: 5em;
+    vertical-align: top;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 10px;
+}
+
+.Calendar_date {
+    text-decoration: underline;
+}
+
+.Calendar_time {
+    font-style: italic;
+}
+
+.Calendar_buttn {
+    float: right;
+    clear: right;
+}
+
+div.Calendar_fields {
+    margin-top: 20px;
+}
+
+div.Calendar_item {
+    margin-bottom: 5px;
+    display: inline-table;
+    width: 100%;
+}

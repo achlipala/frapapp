@@ -1,4 +1,4 @@
-library $/upo_mit
+library $/upo_mit/spring2016
 allow url https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css
 script https://code.jquery.com/jquery-2.1.4.min.js
 script https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js
