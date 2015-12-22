@@ -1,6 +1,8 @@
 library style
 rewrite relation App/*
 rewrite url App/*
+safeGet Private/admin
+alwaysInline App/Sm/next
 file /style.css style.css
 allow url http://adam.chlipala.net/
 allow url http://people.csail.mit.edu/wangpeng/

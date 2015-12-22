@@ -1,9 +1,48 @@
 open Bootstrap3
 structure Theme = Ui.Make(Style)
 
-fun main () =
-    Theme.simple "MIT 6.887, Spring 2016"
-    (Ui.const <xml>
+table user : { MitId : string, UserName : string, IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool }
+  PRIMARY KEY MitId,
+  CONSTRAINT UserName UNIQUE UserName
+
+(* Bootstrap the database with an initial admin user. *)
+task initialize = fn () =>
+  anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
+                        FROM user);
+  if anyUsers then
+      return ()
+  else
+      dml (INSERT INTO user(MitId, UserName, IsInstructor, IsTA, IsStudent, HasDropped)
+           VALUES ('adamc', 'Adam Chlipala', TRUE, FALSE, FALSE, FALSE))
+
+structure Auth = MitCert.Make(struct
+                                  con kerberos = #MitId
+                                  con commonName = #UserName
+                                  con groups = [IsInstructor, IsTA, IsStudent, HasDropped]
+                                  val users = user
+                                  val defaults = Some {IsInstructor = False,
+                                                       IsTA = False,
+                                                       IsStudent = False,
+                                                       HasDropped = False}
+                                  val allowMasquerade = None
+                                  val requireSsl = True
+                              end)
+
+val gInstructor = make [#IsInstructor] ()
+val amInstructor = Auth.inGroup gInstructor
+val requireInstructor = Auth.requireGroup gInstructor
+
+structure Sm = LinearStateMachine.Make(struct
+                                           con steps = [BeforeSemester,
+                                                        PollingAboutOfficeHours,
+                                                        SteadyState,
+                                                        AssigningFinalGrades,
+                                                        SemesterOver]
+                                           val mayChange = amInstructor
+                                       end)
+
+val courseInfo =
+    Ui.const <xml>
       <div class="jumbotron">
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
@@ -85,9 +124,9 @@ fun main () =
       <ul>
         <!--li><a href="https://coq.inria.fr/distrib/current/refman/">Coq reference manual</a></li>
         <li><a href="https://coq.inria.fr/distrib/current/stdlib/">Coq standard-library reference</a></li-->
-        <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
-        <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
-        <li><a href="http://www.cis.upenn.edu/~bcpierce/sf/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
+                                                                                        <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
+                                                                                        <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
+                                                                                        <li><a href="http://www.cis.upenn.edu/~bcpierce/sf/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
       </ul>
 
       <h3>Semantics and program proof</h3>
@@ -101,4 +140,36 @@ fun main () =
       <h2>This web app...</h2>
 
       <p>...is built using advanced type-system ideas relevant to the course, and <a href="https://github.com/achlipala/frapapp">the source code is available</a>.  Pull requests welcome!</p>
-    </xml>)
+    </xml>
+
+
+val main =
+    Theme.simple "MIT 6.887, Spring 2016" courseInfo
+
+structure Smu = Sm.MakeUi(struct
+                              val steps = {BeforeSemester = {Label = "Before semester",
+                                                             WhenEntered = fn _ => return ()},
+                                           PollingAboutOfficeHours = {Label = "Polling about office hours",
+                                                                      WhenEntered = fn _ => return ()},
+                                           SteadyState = {Label = "Steady state",
+                                                          WhenEntered = fn _ => return ()},
+                                           AssigningFinalGrades = {Label = "Assigning Final Grades",
+                                                                   WhenEntered = fn _ => return ()},
+                                           SemesterOver = {Label = "Semester over",
+                                                           WhenEntered = fn _ => return ()}}
+                          end)
+
+structure Private = struct
+
+    val admin =
+        requireInstructor;
+        Theme.tabbed "MIT 6.887, Spring 2016 Admin"
+                     {1 = (Some "Lifecycle",
+                           Smu.ui)}
+
+end
+
+val index = return <xml><body>
+  <a link={main}>Main</a>
+  <a link={Private.admin}>Admin</a>
+</body></xml>
