@@ -2,8 +2,10 @@ library style
 rewrite relation App/*
 rewrite url App/*
 safeGet Private/admin
+safeGet Private/student
 alwaysInline App/Sm/next
 file /style.css style.css
+timeFormat %m/%d/%Y %I:%M %p
 allow url http://adam.chlipala.net/
 allow url http://people.csail.mit.edu/wangpeng/
 allow url http://stellar.mit.edu/S/course/6/fa15/6.820/

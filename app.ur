@@ -5,6 +5,9 @@ table user : { MitId : string, UserName : string, IsInstructor : bool, IsTA : bo
   PRIMARY KEY MitId,
   CONSTRAINT UserName UNIQUE UserName
 
+table possibleOfficeHoursTime : { Time : time }
+  PRIMARY KEY Time
+
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
   anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
@@ -24,13 +27,22 @@ structure Auth = MitCert.Make(struct
                                                        IsTA = False,
                                                        IsStudent = False,
                                                        HasDropped = False}
-                                  val allowMasquerade = None
+                                  val allowMasquerade = Some (make [#IsInstructor] ())
                                   val requireSsl = True
                               end)
+
+val whoami' = s <- Auth.whoamiWithMasquerade;
+    return (case s of
+                None => None
+              | Some s => Some {UserName = s})
 
 val gInstructor = make [#IsInstructor] ()
 val amInstructor = Auth.inGroup gInstructor
 val requireInstructor = Auth.requireGroup gInstructor
+
+val gStudent = make [#IsStudent] ()
+val gsStudent = (gInstructor, gStudent)
+val whoamiStudent = Auth.getGroupsWithMasquerade gsStudent
 
 structure Sm = LinearStateMachine.Make(struct
                                            con steps = [BeforeSemester,
@@ -142,6 +154,8 @@ val courseInfo =
       <p>...is built using advanced type-system ideas relevant to the course, and <a href="https://github.com/achlipala/frapapp">the source code is available</a>.  Pull requests welcome!</p>
     </xml>
 
+val usernameShow = mkShow (fn {UserName = s} => s)
+val timeShow = mkShow (fn {Time = t : time} => show t)
 
 val main =
     Theme.simple "MIT 6.887, Spring 2016" courseInfo
@@ -161,15 +175,97 @@ structure Smu = Sm.MakeUi(struct
 
 structure Private = struct
 
+    val adminPerm =
+        b <- amInstructor;
+        return {Add = b, Delete = b, Modify = b}
+
+    structure EditUser = EditableTable.Make(struct
+                                                val tab = user
+                                                val labels = {MitId = "Kerberos",
+                                                              UserName = "Name",
+                                                              IsInstructor = "Instructor?",
+                                                              IsTA = "TA?",
+                                                              IsStudent = "Student?",
+                                                              HasDropped = "Dropped?"}
+
+                                                val permission = adminPerm
+                                                fun onAdd _ = return ()
+                                                fun onDelete _ = return ()
+                                                fun onModify _ = return ()
+                                            end)
+
+    structure EditPossOh = EditableTable.Make(struct
+                                                  val tab = possibleOfficeHoursTime
+                                                  val labels = {Time = "Time"}
+
+                                                  val permission = adminPerm
+                                                  fun onAdd _ = return ()
+                                                  fun onDelete _ = return ()
+                                                  fun onModify _ = return ()
+                                              end)
+
+    structure OhPoll = ClosedBallot.Make(struct
+                                             con voterKey1 = #UserName
+                                             con voterKeyR = []
+                                             val voter = user
+
+                                             con choiceBallot = []
+                                             con choiceKey1 = #Time
+                                             con choiceKeyR = []
+                                             val choice = possibleOfficeHoursTime
+
+                                             val amVoter = whoami'
+                                             val maxVotesPerVoter = Some 1
+                                             val keyFilter = (WHERE TRUE)
+                                         end)
+
+    fun student masqAs =
+        (case masqAs of
+             "" => Auth.unmasquerade
+           | _ => Auth.masqueradeAs masqAs);
+
+        u <- whoamiStudent;
+        key <- return {UserName = u};
+        st <- Sm.current;
+
+        Theme.tabbed "MIT 6.887, Spring 2016, student page"
+        ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
+          OhPoll.ui {Ballot = (), Voter = key}),
+         (Some "Course Info",
+          courseInfo))
+
     val admin =
         requireInstructor;
+        tm <- now;
+        st <- Sm.current;
+
+        masq <- queryX1 (SELECT user.UserName
+                         FROM user
+                         WHERE user.IsStudent
+                         ORDER BY user.UserName)
+                        (fn r => <xml>
+                          <tr><td><a link={student r.UserName}>{[r.UserName]}</a></td></tr>
+                        </xml>);
+
         Theme.tabbed "MIT 6.887, Spring 2016 Admin"
-                     {1 = (Some "Lifecycle",
-                           Smu.ui)}
+                     ((Some "Lifecycle",
+                       Smu.ui),
+                      (Some "Users",
+                       EditUser.ui),
+                      (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
+                       Ui.seq (Ui.h4 <xml>Enter times like "{[tm]}".  Only the time part will be shown to students.</xml>,
+                               EditPossOh.ui)),
+                      (Some "Masquerade",
+                       Ui.const <xml>
+                         <table class="bs3-table table-striped">
+                           {masq}
+                         </table>
+                       </xml>))
 
 end
 
 val index = return <xml><body>
   <a link={main}>Main</a>
   <a link={Private.admin}>Admin</a>
+  <a link={Private.student ""}>Student</a>
 </body></xml>
