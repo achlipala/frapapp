@@ -347,6 +347,19 @@ structure LectureForum = TableDiscussion.Make(struct
                                                   fun onNewMessage _ = return ()
                                               end)
 
+structure LabForum = TableDiscussion.Make(struct
+                                              con key1 = #LabNum
+                                              con keyR = []
+                                              con thread = #Thread
+                                              val parent = lab
+
+                                              val text = Widget.htmlbox
+                                              fun access _ = forumAccess
+                                              val showOpenVsClosed = True
+                                              val allowPrivate = True
+                                              fun onNewMessage _ = return ()
+                                          end)
+
 structure Private = struct
 
     val adminPerm =
@@ -409,8 +422,7 @@ structure Private = struct
         key <- return {UserName = u};
         st <- Sm.current;
 
-        lec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle,
-                               lecture.When, lecture.Description
+        lec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle, lecture.When, lecture.Description
                              FROM lecture
                              WHERE lecture.When < CURRENT_TIMESTAMP
                              ORDER BY lecture.When DESC
@@ -421,11 +433,22 @@ structure Private = struct
                                     When = minTime,
                                     Description = ""} lec);
 
+        lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
+                            FROM lab
+                            WHERE lab.When < CURRENT_TIMESTAMP
+                            ORDER BY lab.When DESC
+                            LIMIT 1);
+
+        lbr <- return (Option.get {LabNum = 0,
+                                   When = minTime,
+                                   Description = ""} lb);
+
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
          (Some "Calendar",
           calUi),
+
          (case lec of
               None => None
             | Some _ => Some "Last Lecture",
@@ -439,6 +462,21 @@ structure Private = struct
             <h2>Forum</h2>
           </xml>,
                   LectureForum.ui {LectureNum = lecr.LectureNum})),
+
+         (case lb of
+              None => None
+            | Some _ => Some "Last Lab",
+          Ui.seq (Ui.const <xml>
+            <h2>Lab {[lbr.LabNum]}</h2>
+            <h3>{[lbr.When]}</h3>
+            {Widget.html lbr.Description}
+            
+            <hr/>
+            
+            <h2>Forum</h2>
+          </xml>,
+                  LabForum.ui {LabNum = lbr.LabNum})),
+
          (Some "Global Forum",
           GlobalForum.ui),
          (Some "Course Info",
