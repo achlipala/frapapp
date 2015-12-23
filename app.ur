@@ -95,7 +95,13 @@ structure PsetSub = Submission.Make(struct
                                                       Suggestions = "Suggestions for improving the pset"}
 
                                         fun makeFilename k u = "ps" ^ show k.PsetNum ^ "_" ^ u ^ ".v"
-                                        val mayInspect = amStaff
+                                        fun mayInspect uo =
+                                            staff <- amStaff;
+                                            if staff then
+                                                return True
+                                            else
+                                                u <- whoamiStudent;
+                                                return (uo = Some u)
                                     end)
 
 table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When : time, Grade : int, Comment : string }
@@ -582,16 +588,22 @@ structure Private = struct
          (case ps of
               None => None
             | Some _ => Some "Current Pset",
-          Ui.seq (Ui.const <xml>
+          Ui.seq (Ui.constM (fn ctx => <xml>
             <h2>Pset {[psr.PsetNum]}</h2>
             <h3>Released: {[psr.Released]}<br/>
             Due: {[psr.Due]}</h3>
-            {Widget.html psr.Instructions}
-            
+            {Widget.html psr.Instructions}<br/>
+
+            {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>New Submission</xml>
+                            (PsetSub.newUpload {PsetNum = psr.PsetNum})}
+           
             <hr/>
-            
-            <h2>Forum</h2>
-          </xml>,
+          </xml>),
+                  PsetSub.AllFiles.ui {Key = {PsetNum = psr.PsetNum}, User = u},
+                  Ui.const <xml>
+                    <hr/>
+                    <h2>Forum</h2>
+                  </xml>,
                   PsetForum.ui {PsetNum = psr.PsetNum})),
 
          (case lec of
