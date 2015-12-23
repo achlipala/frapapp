@@ -71,6 +71,11 @@ val instructorOnly =
 val gStudent = make [#IsStudent] ()
 val gsStudent = (gInstructor, gStudent)
 val whoamiStudent = Auth.getGroupsWithMasquerade gsStudent
+val amStudent = Auth.inGroup gStudent
+
+val gTA = make [#IsTA] ()
+val gsStaff = (gInstructor, gTA)
+val amStaff = Auth.inGroups gsStaff
 
 structure Sm = LinearStateMachine.Make(struct
                                            con steps = [BeforeSemester,
@@ -309,6 +314,31 @@ val calUi = Ui.seq (Ui.h4 <xml>
   Peng's office hours are in TBD.
 </xml>, PublicCal.ui calBounds)
 
+structure ForumParams = struct
+    type text_internal = _
+    type text_config = _
+    val text = Widget.htmlbox
+
+    val access =
+        staff <- amStaff;
+        if staff then
+            u <- Auth.getUserWithMasquerade;
+            return (Discussion.Admin {User = u})
+        else
+            student <- amStudent;
+            if student then
+                u <- Auth.getUserWithMasquerade;
+                return (Discussion.Post {User = u, MayEdit = True, MayDelete = True, MayMarkClosed = True})
+            else
+                return Discussion.Read
+
+    val showOpenVsClosed = True
+    val allowPrivate = True
+    fun onNewMessage _ = return ()
+end
+
+structure GlobalForum = GlobalDiscussion.Make(ForumParams)
+
 structure Private = struct
 
     val adminPerm =
@@ -374,10 +404,12 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
-         (Some "Course Info",
-          courseInfo),
          (Some "Calendar",
-          calUi))
+          calUi),
+         (Some "Global Forum",
+          GlobalForum.ui),
+         (Some "Course Info",
+          courseInfo))
 
     structure AdminCal = Calendar.Make(struct
                                            val t = ThisTerm.cal
