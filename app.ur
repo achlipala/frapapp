@@ -81,6 +81,7 @@ val gsStaff = (gInstructor, gTA)
 val whoamiStaff = Auth.getGroups gsStaff
 val amStaff = Auth.inGroups gsStaff
 val requireStaff = Auth.requireGroups gsStaff
+val getStaff = Auth.getGroups gsStaff
 
 val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
 
@@ -731,6 +732,108 @@ structure Private = struct
                          </table>
                        </xml>))
 
+    structure Students = SimpleQuery1.Make(struct
+                                               val query = (SELECT user.Kerberos, user.UserName
+                                                            FROM user
+                                                            WHERE user.IsStudent
+                                                            ORDER BY user.UserName DESC)
+
+                                               val labels = {Kerberos = "Kerberos",
+                                                             UserName = "Name"}
+                                           end)
+
+    val staff =
+        u <- getStaff;
+        key <- return {UserName = u};
+        st <- Sm.current;
+
+        lec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle, lecture.When, lecture.Description
+                             FROM lecture
+                             WHERE lecture.When < CURRENT_TIMESTAMP
+                             ORDER BY lecture.When DESC
+                             LIMIT 1);
+
+        lecr <- return (Option.get {LectureNum = 0,
+                                    LectureTitle = "",
+                                    When = minTime,
+                                    Description = ""} lec);
+
+        lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
+                            FROM lab
+                            WHERE lab.When < CURRENT_TIMESTAMP
+                            ORDER BY lab.When DESC
+                            LIMIT 1);
+
+        lbr <- return (Option.get {LabNum = 0,
+                                   When = minTime,
+                                   Description = ""} lb);
+
+        ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
+                            FROM pset
+                            WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
+                            ORDER BY pset.Due DESC
+                            LIMIT 1);
+
+        psr <- return (Option.get {PsetNum = 0,
+                                   Released = minTime,
+                                   Due = minTime,
+                                   Instructions = ""} ps);
+
+        Theme.tabbed "MIT 6.887, Spring 2016 Staff"
+                     ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
+                       OhPoll.ui {Ballot = (), Voter = key}),
+                      (Some "Calendar",
+                       AdminCal.ui calBounds),
+                      (case ps of   
+                           None => None
+                         | Some _ => Some "Current Pset",
+                       Ui.seq (Ui.const <xml>
+                         <h2>Pset {[psr.PsetNum]}</h2>
+                         <h3>Released: {[psr.Released]}<br/>
+                         Due: {[psr.Due]}</h3>
+                         {Widget.html psr.Instructions}
+
+                         <hr/>
+
+                         <h2>Forum</h2>
+                       </xml>,
+                       PsetForum.ui {PsetNum = psr.PsetNum})),
+
+                      (case lec of
+                           None => None
+                         | Some _ => Some "Last Lecture",
+                       Ui.seq (Ui.const <xml>
+                         <h2>Lecture {[lecr.LectureNum]}: {[lecr.LectureTitle]}</h2>
+                         <h3>{[lecr.When]}</h3>
+                         {Widget.html lecr.Description}
+
+                         <hr/>
+
+                         <h2>Forum</h2>
+                       </xml>,
+                               LectureForum.ui {LectureNum = lecr.LectureNum})),
+
+                      (case lb of
+                           None => None
+                         | Some _ => Some "Last Lab",
+                       Ui.seq (Ui.const <xml>
+                         <h2>Lab {[lbr.LabNum]}</h2>
+                         <h3>{[lbr.When]}</h3>
+                         {Widget.html lbr.Description}
+
+                         <hr/>
+
+                         <h2>Forum</h2>
+                       </xml>,
+                               LabForum.ui {LabNum = lbr.LabNum})),
+
+                      (Some "Global Forum",
+                       GlobalForum.ui),
+                      (Some "Students",
+                       Students.ui),
+                      (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
+                       AllGrades.ui))
+
 end
 
 val main =
@@ -752,6 +855,7 @@ val main =
 val index = return <xml><body>
   <a link={main}>Main</a>
   <a link={Private.admin}>Admin</a>
+  <a link={Private.staff}>Staff</a>
   <a link={Private.student ""}>Student</a>
   <a link={Private.psetGrades 0 ""}>Grade</a>
 </body></xml>

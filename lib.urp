@@ -4,6 +4,7 @@ rewrite url App/*
 rewrite style App/*
 safeGet main
 safeGet Private/admin
+safeGet Private/staff
 safeGet Private/student
 safeGet Private/psetGrades
 safeGet PsetSub/AllFiles/retrieve
