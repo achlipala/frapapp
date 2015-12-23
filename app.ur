@@ -72,13 +72,50 @@ val instructorOnly =
                 Calendar.Read)
 
 val gStudent = make [#IsStudent] ()
-val gsStudent = (gInstructor, gStudent)
+val gTA = make [#IsTA] ()
+val gsStudent = (gInstructor, gTA, gStudent)
 val whoamiStudent = Auth.getGroupsWithMasquerade gsStudent
 val amStudent = Auth.inGroup gStudent
 
-val gTA = make [#IsTA] ()
 val gsStaff = (gInstructor, gTA)
+val whoamiStaff = Auth.getGroups gsStaff
 val amStaff = Auth.inGroups gsStaff
+val requireStaff = Auth.requireGroups gsStaff
+
+val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
+
+structure PsetSub = Submission.Make(struct
+                                        val tab = pset
+                                        con ukey = #UserName
+                                        val user = user
+                                        val whoami = Auth.whoamiWithMasquerade
+                                        con fs = [Hours = (int, _, _),
+                                                  Suggestions = (string, _, _)]
+                                        val labels = {Hours = "Hours spent on the pset (round to nearest integer)",
+                                                      Suggestions = "Suggestions for improving the pset"}
+
+                                        fun makeFilename k u = "ps" ^ show k.PsetNum ^ "_" ^ u ^ ".v"
+                                        val mayInspect = amStaff
+                                    end)
+
+table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When : time, Grade : int, Comment : string }
+  PRIMARY KEY (PsetNum, PsetStudent, Grader, When),
+  CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE,
+  CONSTRAINT Student FOREIGN KEY PsetStudent REFERENCES user(UserName) ON UPDATE CASCADE,
+  CONSTRAINT Grader FOREIGN KEY Grader REFERENCES user(UserName) ON UPDATE CASCADE
+
+val psetGradeShow : show {PsetNum : int, PsetStudent : string}
+  = mkShow (fn r => "#" ^ show r.PsetNum ^ ", " ^ r.PsetStudent)
+
+structure PsetGrade = Review.Make(struct
+                                      con reviewer = #Grader
+                                      con reviewed = [PsetNum = _, PsetStudent = _]
+                                      val tab = psetGrade
+                                      val labels = {Grade = "Grade",
+                                                    Comment = "Comment"}
+                                      fun summarize r = txt r.Grade
+                                      val whoami = u <- whoamiStaff; return (Some u)
+                                  end)
 
 structure Sm = LinearStateMachine.Make(struct
                                            con steps = [BeforeSemester,
@@ -286,8 +323,6 @@ fun getPset num =
              FROM pset
              WHERE pset.PsetNum = {[num]})
 
-val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
-
 structure PsetCal = Calendar.FromTable(struct
                                            con tag = #Pset
                                            con key = [PsetNum = _]
@@ -310,6 +345,15 @@ structure PsetCal = Calendar.FromTable(struct
                                                                                      <h3>Released {[lb.Released]}<br/>
                                                                                      Due {[lb.Due]}</h3>
                                                                                      
+                                                                                     <button class="btn btn-primary"
+                                                                                              onclick={fn _ =>
+                                                                                                          xm <- PsetSub.newUpload r;
+                                                                                                          set content xm}>
+                                                                                       New Submission
+                                                                                     </button>
+
+                                                                                     <hr/>
+
                                                                                      {Widget.html lb.Instructions}
                                                                                    </xml>
                                                                                    <xml>Close</xml>);
@@ -615,6 +659,13 @@ structure Private = struct
                                    val expectedSubjectNumber = "6.887"
                                end)
 
+    fun psetGrades n u =
+        requireStaff;
+        Theme.simple ("Grading Pset #" ^ show n ^ ", " ^ u)
+                     (Ui.seq
+                          (PsetSub.AllFiles.ui {Key = {PsetNum = n}, User = u},
+                           PsetGrade.One.ui {PsetNum = n, PsetStudent = u}))
+
     val admin =
         requireInstructor;
         tm <- now;
@@ -669,4 +720,5 @@ val index = return <xml><body>
   <a link={main}>Main</a>
   <a link={Private.admin}>Admin</a>
   <a link={Private.student ""}>Student</a>
+  <a link={Private.psetGrades 0 ""}>Grade</a>
 </body></xml>

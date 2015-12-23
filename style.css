@@ -43,3 +43,51 @@ div.Calendar_item {
     display: inline-table;
     width: 100%;
 }
+
+.PsetGrade_summary {
+    width: 100%;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.PsetGrade_fullHeader {
+    width: 100%;
+    border-style: solid;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.PsetGrade_full {
+    width: 100%;
+    border-style: solid;
+    padding: 10px;
+}
+
+.PsetGrade_editingHeader {
+    width: 100%;
+    border-style: solid;
+}
+
+.PsetGrade_editing {
+    width: 100%;
+    border-style: solid;
+    padding: 10px;
+}
+
+.PsetSub_file {
+    width: 100%;
+    border-style: solid;
+    padding: 10px;
+}
+
+.Discussion_post {
+    width: 100%;
+    border-style: solid;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.Discussion_post_header {
+    border-style: solid;
+    padding: 5px;
+}

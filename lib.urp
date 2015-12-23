@@ -1,12 +1,16 @@
 library style
 rewrite relation App/*
 rewrite url App/*
+rewrite style App/*
 safeGet main
 safeGet Private/admin
 safeGet Private/student
+safeGet Private/psetGrades
+safeGet PsetSub/AllFiles/retrieve
 alwaysInline App/Sm/next
 file /style.css style.css
 timeFormat %m/%d/%Y %I:%M %p
+allow mime text/x-verilog
 allow url http://adam.chlipala.net/
 allow url http://people.csail.mit.edu/wangpeng/
 allow url http://stellar.mit.edu/S/course/6/fa15/6.820/
