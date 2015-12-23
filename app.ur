@@ -314,30 +314,38 @@ val calUi = Ui.seq (Ui.h4 <xml>
   Peng's office hours are in TBD.
 </xml>, PublicCal.ui calBounds)
 
-structure ForumParams = struct
-    type text_internal = _
-    type text_config = _
-    val text = Widget.htmlbox
-
-    val access =
-        staff <- amStaff;
-        if staff then
+val forumAccess = staff <- amStaff;
+    if staff then
+        u <- Auth.getUserWithMasquerade;
+        return (Discussion.Admin {User = u})
+    else
+        student <- amStudent;
+        if student then
             u <- Auth.getUserWithMasquerade;
-            return (Discussion.Admin {User = u})
+            return (Discussion.Post {User = u, MayEdit = True, MayDelete = True, MayMarkClosed = True})
         else
-            student <- amStudent;
-            if student then
-                u <- Auth.getUserWithMasquerade;
-                return (Discussion.Post {User = u, MayEdit = True, MayDelete = True, MayMarkClosed = True})
-            else
-                return Discussion.Read
+            return Discussion.Read
 
-    val showOpenVsClosed = True
-    val allowPrivate = True
-    fun onNewMessage _ = return ()
-end
+structure GlobalForum = GlobalDiscussion.Make(struct
+                                                  val text = Widget.htmlbox
+                                                  val access = forumAccess
+                                                  val showOpenVsClosed = True
+                                                  val allowPrivate = True
+                                                  fun onNewMessage _ = return ()
+                                              end)
 
-structure GlobalForum = GlobalDiscussion.Make(ForumParams)
+structure LectureForum = TableDiscussion.Make(struct
+                                                  con key1 = #LectureNum
+                                                  con keyR = []
+                                                  con thread = #Thread
+                                                  val parent = lecture
+
+                                                  val text = Widget.htmlbox
+                                                  fun access _ = forumAccess
+                                                  val showOpenVsClosed = True
+                                                  val allowPrivate = True
+                                                  fun onNewMessage _ = return ()
+                                              end)
 
 structure Private = struct
 
@@ -401,11 +409,36 @@ structure Private = struct
         key <- return {UserName = u};
         st <- Sm.current;
 
+        lec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle,
+                               lecture.When, lecture.Description
+                             FROM lecture
+                             WHERE lecture.When < CURRENT_TIMESTAMP
+                             ORDER BY lecture.When DESC
+                             LIMIT 1);
+
+        lecr <- return (Option.get {LectureNum = 0,
+                                    LectureTitle = "",
+                                    When = minTime,
+                                    Description = ""} lec);
+
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
          (Some "Calendar",
           calUi),
+         (case lec of
+              None => None
+            | Some _ => Some "Last Lecture",
+          Ui.seq (Ui.const <xml>
+            <h2>Lecture {[lecr.LectureNum]}: {[lecr.LectureTitle]}</h2>
+            <h3>{[lecr.When]}</h3>
+            {Widget.html lecr.Description}
+            
+            <hr/>
+            
+            <h2>Forum</h2>
+          </xml>,
+                  LectureForum.ui {LectureNum = lecr.LectureNum})),
          (Some "Global Forum",
           GlobalForum.ui),
          (Some "Course Info",
