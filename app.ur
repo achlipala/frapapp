@@ -4,8 +4,9 @@ structure ThisTerm = Spring2016
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 
-table user : { MitId : string, UserName : string, IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool }
-  PRIMARY KEY MitId,
+table user : { Kerberos : string, MitId : string, UserName : string, IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool,
+               Units : string, SubjectNum : string, SectionNum : string, LastName : string, FirstName : string, MiddleInitial : string }
+  PRIMARY KEY Kerberos,
   CONSTRAINT UserName UNIQUE UserName
 
 table possibleOfficeHoursTime : { Time : time }
@@ -29,18 +30,25 @@ task initialize = fn () =>
   if anyUsers then
       return ()
   else
-      dml (INSERT INTO user(MitId, UserName, IsInstructor, IsTA, IsStudent, HasDropped)
-           VALUES ('adamc', 'Adam Chlipala', TRUE, FALSE, FALSE, FALSE))
+      dml (INSERT INTO user(Kerberos, MitId, UserName, IsInstructor, IsTA, IsStudent, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
+           VALUES ('adamc', '', 'Adam Chlipala', TRUE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
 
 structure Auth = MitCert.Make(struct
-                                  con kerberos = #MitId
+                                  con kerberos = #Kerberos
                                   con commonName = #UserName
                                   con groups = [IsInstructor, IsTA, IsStudent, HasDropped]
                                   val users = user
                                   val defaults = Some {IsInstructor = False,
                                                        IsTA = False,
                                                        IsStudent = False,
-                                                       HasDropped = False}
+                                                       HasDropped = False,
+                                                       MitId = "",
+                                                       Units = "",
+                                                       SubjectNum = "",
+                                                       SectionNum = "",
+                                                       LastName = "",
+                                                       FirstName = "",
+                                                       MiddleInitial = ""}
                                   val allowMasquerade = Some (make [#IsInstructor] ())
                                   val requireSsl = True
                               end)
@@ -309,12 +317,19 @@ structure Private = struct
 
     structure EditUser = EditableTable.Make(struct
                                                 val tab = user
-                                                val labels = {MitId = "Kerberos",
+                                                val labels = {Kerberos = "Kerberos",
                                                               UserName = "Name",
                                                               IsInstructor = "Instructor?",
                                                               IsTA = "TA?",
                                                               IsStudent = "Student?",
-                                                              HasDropped = "Dropped?"}
+                                                              HasDropped = "Dropped?",
+                                                              MitId = "MIT ID",
+                                                              Units = "Units",
+                                                              SubjectNum = "Subject",
+                                                              SectionNum = "Section",
+                                                              LastName = "Last",
+                                                              FirstName = "First",
+                                                              MiddleInitial = "MI"}
 
                                                 val permission = adminPerm
                                                 fun onAdd _ = return ()
@@ -371,6 +386,15 @@ structure Private = struct
                                                        |> Calendar.compose LectureCal.cal
                                        end)
 
+    structure WS = WebSIS.Make(struct
+                                   val user = user
+
+                                   val defaults = {IsInstructor = False,
+                                                   IsTA = False}
+                                   val amAuthorized = amInstructor
+                                   val expectedSubjectNumber = "6.887"
+                               end)
+
     val admin =
         requireInstructor;
         tm <- now;
@@ -389,6 +413,8 @@ structure Private = struct
                        Smu.ui),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
+                      (Some "Import",
+                       WS.ui),
                       (Some "Users",
                        EditUser.ui),
                       (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
