@@ -20,6 +20,9 @@ table lab : { LabNum : int, When : time, Description : string }
   PRIMARY KEY LabNum,
   CONSTRAINT When UNIQUE When
 
+table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Instructions : string }
+  PRIMARY KEY PsetNum
+
 table officeHours : { OhUser : string, When : time }
   PRIMARY KEY When
 
@@ -278,6 +281,46 @@ structure LabCal = Calendar.FromTable(struct
                                           val showTime = True
                                       end)
 
+fun getPset num =
+    oneRow1 (SELECT pset.Instructions, pset.Released, pset.Due
+             FROM pset
+             WHERE pset.PsetNum = {[num]})
+
+val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
+
+structure PsetCal = Calendar.FromTable(struct
+                                           con tag = #Pset
+                                           con key = [PsetNum = _]
+                                           con times = [Released, Due]
+                                           val tab = pset
+                                           val title = "Pset"
+                                           val labels = {PsetNum = "Pset#",
+                                                         Instructions = "Instructions",
+                                                         Released = "Released",
+                                                         Due = "Due",
+                                                         GradesDue = "Grades due"}
+                                           val kinds = {Released = "released", Due = "due"}
+                                           val ws = {Instructions = Widget.htmlbox} ++ _
+                                           val display = Some (fn ctx r =>
+                                                                  content <- source <xml/>;
+                                                                  lb <- rpc (getPset r.PsetNum);
+                                                                  set content (Ui.simpleModal
+                                                                                   <xml>
+                                                                                     <h2>Pset #{[r.PsetNum]}</h2>
+                                                                                     <h3>Released {[lb.Released]}<br/>
+                                                                                     Due {[lb.Due]}</h3>
+                                                                                     
+                                                                                     {Widget.html lb.Instructions}
+                                                                                   </xml>
+                                                                                   <xml>Close</xml>);
+                                                                  return <xml>
+                                                                    <dyn signal={signal content}/>
+                                                                  </xml>)
+
+                                           val auth = instructorOnly
+                                           val showTime = True
+                                       end)
+
 val showOh = mkShow (fn {OhUser = s} => s ^ "'s office hours")
 
 structure OhCal = Calendar.FromTable(struct
@@ -304,6 +347,7 @@ structure OhCal = Calendar.FromTable(struct
 structure PublicCal = Calendar.Make(struct
                                         val t = ThisTerm.cal
                                                     |> Calendar.compose OhCal.cal
+                                                    |> Calendar.compose PsetCal.cal
                                                     |> Calendar.compose LabCal.cal
                                                     |> Calendar.compose LectureCal.cal
                                     end)
@@ -359,6 +403,19 @@ structure LabForum = TableDiscussion.Make(struct
                                               val allowPrivate = True
                                               fun onNewMessage _ = return ()
                                           end)
+
+structure PsetForum = TableDiscussion.Make(struct
+                                               con key1 = #PsetNum
+                                               con keyR = []
+                                               con thread = #Thread
+                                               val parent = pset
+
+                                               val text = Widget.htmlbox
+                                               fun access _ = forumAccess
+                                               val showOpenVsClosed = True
+                                               val allowPrivate = True
+                                               fun onNewMessage _ = return ()
+                                           end)
 
 structure Private = struct
 
@@ -443,11 +500,37 @@ structure Private = struct
                                    When = minTime,
                                    Description = ""} lb);
 
+        ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
+                            FROM pset
+                            WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
+                            ORDER BY pset.Due DESC
+                            LIMIT 1);
+
+        psr <- return (Option.get {PsetNum = 0,
+                                   Released = minTime,
+                                   Due = minTime,
+                                   Instructions = ""} ps);
+
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
          (Some "Calendar",
           calUi),
+
+         (case ps of
+              None => None
+            | Some _ => Some "Current Pset",
+          Ui.seq (Ui.const <xml>
+            <h2>Pset {[psr.PsetNum]}</h2>
+            <h3>Released: {[psr.Released]}<br/>
+            Due: {[psr.Due]}</h3>
+            {Widget.html psr.Instructions}
+            
+            <hr/>
+            
+            <h2>Forum</h2>
+          </xml>,
+                  PsetForum.ui {PsetNum = psr.PsetNum})),
 
          (case lec of
               None => None
@@ -482,9 +565,43 @@ structure Private = struct
          (Some "Course Info",
           courseInfo))
 
+    structure PsetCal = Calendar.FromTable(struct
+                                               con tag = #Pset
+                                               con key = [PsetNum = _]
+                                               con times = [Released, Due, GradesDue]
+                                               val tab = pset
+                                               val title = "Pset"
+                                               val labels = {PsetNum = "Pset#",
+                                                             Instructions = "Instructions",
+                                                             Released = "Released",
+                                                             Due = "Due",
+                                                             GradesDue = "Grades due"}
+                                               val kinds = {Released = "released", Due = "due", GradesDue = "grades due"}
+                                               val ws = {Instructions = Widget.htmlbox} ++ _
+                                               val display = Some (fn ctx r =>
+                                                                      content <- source <xml/>;
+                                                                      lb <- rpc (getPset r.PsetNum);
+                                                                      set content (Ui.simpleModal
+                                                                                       <xml>
+                                                                                         <h2>Pset #{[r.PsetNum]}</h2>
+                                                                                         <h3>Released {[lb.Released]}<br/>
+                                                                                         Due {[lb.Due]}</h3>
+                                                                                         
+                                                                                         {Widget.html lb.Instructions}
+                                                                                       </xml>
+                                                                                       <xml>Close</xml>);
+                                                                      return <xml>
+                                                                        <dyn signal={signal content}/>
+                                                                      </xml>)
+
+                                               val auth = instructorOnly
+                                               val showTime = True
+                                           end)
+
     structure AdminCal = Calendar.Make(struct
                                            val t = ThisTerm.cal
                                                        |> Calendar.compose OhCal.cal
+                                                       |> Calendar.compose PsetCal.cal
                                                        |> Calendar.compose LabCal.cal
                                                        |> Calendar.compose LectureCal.cal
                                        end)
