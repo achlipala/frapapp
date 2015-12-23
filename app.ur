@@ -117,6 +117,24 @@ structure PsetGrade = Review.Make(struct
                                       val whoami = u <- whoamiStaff; return (Some u)
                                   end)
 
+val gradeTree = Grades.assignments
+                [[PsetNum = _]]
+                [#PsetStudent]
+                [#When]
+                [#Grade]
+                [#UserName]
+                "Overall"
+                pset
+                user
+                psetGrade
+
+structure GradeTree = struct
+    val t = gradeTree
+end
+
+structure AllGrades = Grades.AllStudents(GradeTree)
+structure StudentGrades = Grades.OneStudent(GradeTree)
+
 structure Sm = LinearStateMachine.Make(struct
                                            con steps = [BeforeSemester,
                                                         PollingAboutOfficeHours,
@@ -606,6 +624,9 @@ structure Private = struct
 
          (Some "Global Forum",
           GlobalForum.ui),
+         (Ui.when (st > make [#BeforeSemester] ()) "Grades",
+          Ui.seq (Ui.h4 <xml>The range shows your possible final averages, based on grades earned on the remaining assignments.</xml>,
+                  StudentGrades.ui u)),
          (Some "Course Info",
           courseInfo))
 
