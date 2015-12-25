@@ -81,7 +81,7 @@ val gsStaff = (gInstructor, gTA)
 val whoamiStaff = Auth.getGroups gsStaff
 val amStaff = Auth.inGroups gsStaff
 val requireStaff = Auth.requireGroups gsStaff
-val getStaff = Auth.getGroups gsStaff
+val getStaff = Auth.getGroupsWithMasquerade gsStaff
 
 val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
 
@@ -746,38 +746,6 @@ structure Private = struct
                           (PsetSub.AllFiles.ui {Key = {PsetNum = n}, User = u},
                            PsetGrade.One.ui {PsetNum = n, PsetStudent = u}))
 
-    val admin =
-        requireInstructor;
-        tm <- now;
-        st <- Sm.current;
-
-        masq <- queryX1 (SELECT user.UserName
-                         FROM user
-                         WHERE user.IsStudent
-                         ORDER BY user.UserName)
-                        (fn r => <xml>
-                          <tr><td><a link={student r.UserName}>{[r.UserName]}</a></td></tr>
-                        </xml>);
-
-        Theme.tabbed "MIT 6.887, Spring 2016 Admin"
-                     ((Some "Lifecycle",
-                       Smu.ui),
-                      (Some "Calendar",
-                       AdminCal.ui calBounds),
-                      (Some "Import",
-                       WS.ui),
-                      (Some "Users",
-                       EditUser.ui),
-                      (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
-                       Ui.seq (Ui.h4 <xml>Enter times like "{[tm]}".  Only the time part will be shown to students.</xml>,
-                               EditPossOh.ui)),
-                      (Some "Masquerade",
-                       Ui.const <xml>
-                         <table class="bs3-table table-striped">
-                           {masq}
-                         </table>
-                       </xml>))
-
     structure Students = SimpleQuery1.Make(struct
                                                val query = (SELECT user.Kerberos, user.UserName
                                                             FROM user
@@ -788,12 +756,36 @@ structure Private = struct
                                                              UserName = "Name"}
                                            end)
 
+    structure GradingTodo = Todo.Grading(struct
+                                             con tag = #Grading
+                                             con akey = [PsetNum = _]
+                                             con due = #GradesDue
+                                             con ukey = #UserName
+                                             con guser = #PsetStudent
+
+                                             val assignments = pset
+                                             val acond = (WHERE Assignments.Due < CURRENT_TIMESTAMP)
+                                             val users = user
+                                             val ucond = (WHERE Users.IsStudent)
+                                             val grades = psetGrade
+                                             val gcond = (WHERE Graders.IsTA)
+
+                                             val title = "Grading"
+                                             fun render r u =
+                                                 <xml><a link={psetGrades r.PsetNum r.PsetStudent}>Grade Pset {[r.PsetNum]} for {[r.PsetStudent]}</a></xml>
+                                         end)
+
     structure StaffTodo = Todo.Make(struct
                                         val t = LectureTodo.todo
                                                     |> Todo.compose LabTodo.todo
+                                                    |> Todo.compose GradingTodo.todo
                                     end)
 
-    val staff =
+    fun staff masqAs =
+        (case masqAs of
+             "" => Auth.unmasquerade
+           | _ => Auth.masqueradeAs masqAs);
+
         u <- getStaff;
         key <- return {UserName = u};
         st <- Sm.current;
@@ -887,6 +879,52 @@ structure Private = struct
                       (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
                        AllGrades.ui))
 
+    val admin =
+        requireInstructor;
+        tm <- now;
+        st <- Sm.current;
+
+        masq <- queryX1 (SELECT user.UserName
+                         FROM user
+                         WHERE user.IsStudent
+                         ORDER BY user.UserName)
+                        (fn r => <xml>
+                          <tr><td><a link={student r.UserName}>{[r.UserName]}</a></td></tr>
+                        </xml>);
+
+        smasq <- queryX1 (SELECT user.UserName
+                          FROM user
+                          WHERE user.IsTA
+                          ORDER BY user.UserName)
+                         (fn r => <xml>
+                           <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
+                         </xml>);
+
+        Theme.tabbed "MIT 6.887, Spring 2016 Admin"
+                     ((Some "Lifecycle",
+                       Smu.ui),
+                      (Some "Calendar",
+                       AdminCal.ui calBounds),
+                      (Some "Import",
+                       WS.ui),
+                      (Some "Users",
+                       EditUser.ui),
+                      (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
+                       Ui.seq (Ui.h4 <xml>Enter times like "{[tm]}".  Only the time part will be shown to students.</xml>,
+                               EditPossOh.ui)),
+                      (Some "Student Masquerade",
+                       Ui.const <xml>
+                         <table class="bs3-table table-striped">
+                           {masq}
+                         </table>
+                       </xml>),
+                      (Some "TA Masquerade",
+                       Ui.const <xml>
+                         <table class="bs3-table table-striped">
+                           {smasq}
+                         </table>
+                       </xml>))
+
 end
 
 val main =
@@ -908,7 +946,7 @@ val main =
 val index = return <xml><body>
   <a link={main}>Main</a>
   <a link={Private.admin}>Admin</a>
-  <a link={Private.staff}>Staff</a>
+  <a link={Private.staff ""}>Staff</a>
   <a link={Private.student ""}>Student</a>
   <a link={Private.psetGrades 0 ""}>Grade</a>
 </body></xml>
