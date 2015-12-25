@@ -112,7 +112,7 @@ table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When :
   CONSTRAINT Grader FOREIGN KEY Grader REFERENCES user(UserName) ON UPDATE CASCADE
 
 val psetGradeShow : show {PsetNum : int, PsetStudent : string}
-  = mkShow (fn r => "#" ^ show r.PsetNum ^ ", " ^ r.PsetStudent)
+  = mkShow (fn r => "Pset " ^ show r.PsetNum ^ ", " ^ r.PsetStudent)
 
 structure PsetGrade = Review.Make(struct
                                       con reviewer = #Grader
@@ -120,6 +120,7 @@ structure PsetGrade = Review.Make(struct
                                       val tab = psetGrade
                                       val labels = {Grade = "Grade",
                                                     Comment = "Comment"}
+                                      val widgets = {Comment = Widget.htmlbox} ++ _
                                       fun summarize r = txt r.Grade
                                       val whoami = u <- whoamiStaff; return (Some u)
                                   end)
@@ -685,7 +686,12 @@ structure Private = struct
           GlobalForum.ui),
          (Ui.when (st > make [#BeforeSemester] ()) "Grades",
           Ui.seq (Ui.h4 <xml>The range shows your possible final averages, based on grades earned on the remaining assignments.</xml>,
-                  StudentGrades.ui u)),
+                  StudentGrades.ui u,
+                  Ui.const <xml>
+                    <hr/>
+                    <h3>Feedback</h3>
+                  </xml>,
+                  PsetGrade.Several.ui (WHERE T.PsetStudent = {[u]}))),
          (Some "Course Info",
           courseInfo))
 
