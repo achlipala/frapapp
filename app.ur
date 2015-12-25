@@ -563,9 +563,24 @@ structure Private = struct
                                              val keyFilter = (WHERE TRUE)
                                          end)
 
+    structure PsetTodoStudent = Todo.WithDueDate(struct
+                                                     con tag = #Pset
+                                                     con due = #Due
+                                                     con key = [PsetNum = int]
+                                                     val items = pset
+                                                     val done = PsetSub.submission
+                                                     con ukey = #UserName
+                                                     val users = user
+                                                     val title = "Pset"
+                                                     val ucond = (WHERE Users.IsStudent)
+
+                                                     fun render r _ = <xml>{[r]}</xml>
+                                                 end)
+
     structure StudentTodo = Todo.Make(struct
                                           val t = LectureTodo.todo
                                                       |> Todo.compose LabTodo.todo
+                                                      |> Todo.compose PsetTodoStudent.todo
                                       end)
 
     fun student masqAs =
