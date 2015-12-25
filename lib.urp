@@ -8,6 +8,7 @@ safeGet Private/staff
 safeGet Private/student
 safeGet Private/psetGrades
 safeGet PsetSub/AllFiles/retrieve
+safeGet Private/Grades/csv
 alwaysInline App/Sm/next
 file /style.css style.css
 timeFormat %m/%d/%Y %I:%M %p

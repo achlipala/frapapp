@@ -781,6 +781,20 @@ structure Private = struct
                                                     |> Todo.compose GradingTodo.todo
                                     end)
 
+    structure Grades = MitGrades.Make(struct
+                                          con groups = [IsInstructor, IsTA, HasDropped]
+                                          con others = [Kerberos = _]
+                                          constraint [MitId, UserName, IsStudent, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
+                                          val users = user
+                                          val grades = gradeTree
+                                          val access =
+                                              staff <- amStaff;
+                                              return (if staff then
+                                                          FinalGrades.Write
+                                                      else
+                                                          FinalGrades.Forbidden)
+                                      end)
+
     fun staff masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -825,6 +839,8 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
+                      (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
+                       Grades.ui),
                       (Some "Todo",
                        StaffTodo.OneUser.ui u),
                       (Some "Calendar",
