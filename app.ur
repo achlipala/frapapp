@@ -486,6 +486,30 @@ structure PsetForum = TableDiscussion.Make(struct
                                                fun onNewMessage _ = return ()
                                            end)
 
+structure LectureTodo = Todo.Happenings(struct
+                                            con tag = #Lecture
+                                            con key = [LectureNum = _, LectureTitle = _]
+                                            con when = #When
+                                            val items = lecture
+                                            con ukey = #UserName
+                                            val users = user
+                                            val ucond = (WHERE Users.IsStudent OR Users.IsInstructor OR Users.IsTA)
+                                            val title = "Lecture"
+                                            fun render r = <xml>{[r]}</xml>
+                                        end)
+
+structure LabTodo = Todo.Happenings(struct
+                                        con tag = #Lab
+                                        con key = [LabNum = _]
+                                        con when = #When
+                                        val items = lab
+                                        con ukey = #UserName
+                                        val users = user
+                                        val ucond = (WHERE Users.IsStudent OR Users.IsInstructor OR Users.IsTA)
+                                        val title = "Lab"
+                                        fun render r = <xml>{[r]}</xml>
+                                    end)
+
 structure Private = struct
 
     val adminPerm =
@@ -539,6 +563,11 @@ structure Private = struct
                                              val keyFilter = (WHERE TRUE)
                                          end)
 
+    structure StudentTodo = Todo.Make(struct
+                                          val t = LectureTodo.todo
+                                                      |> Todo.compose LabTodo.todo
+                                      end)
+
     fun student masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -583,6 +612,8 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
+         (Some "Todo",
+          StudentTodo.OneUser.ui u),
          (Some "Calendar",
           calUi),
 
@@ -742,6 +773,11 @@ structure Private = struct
                                                              UserName = "Name"}
                                            end)
 
+    structure StaffTodo = Todo.Make(struct
+                                        val t = LectureTodo.todo
+                                                    |> Todo.compose LabTodo.todo
+                                    end)
+
     val staff =
         u <- getStaff;
         key <- return {UserName = u};
@@ -782,6 +818,8 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
+                      (Some "Todo",
+                       StaffTodo.OneUser.ui u),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
                       (case ps of   
