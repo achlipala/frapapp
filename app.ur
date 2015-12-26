@@ -144,7 +144,8 @@ structure AllGrades = Grades.AllStudents(GradeTree)
 structure StudentGrades = Grades.OneStudent(GradeTree)
 
 structure Sm = LinearStateMachine.Make(struct
-                                           con steps = [BeforeSemester,
+                                           con steps = [PlanningCalendar,
+                                                        ReleaseCalendar,
                                                         PollingAboutOfficeHours,
                                                         SteadyState,
                                                         AssigningFinalGrades,
@@ -257,8 +258,10 @@ val usernameShow = mkShow (fn {UserName = s} => s)
 val timeShow = mkShow (fn {Time = t : time} => show t)
 
 structure Smu = Sm.MakeUi(struct
-                              val steps = {BeforeSemester = {Label = "Before semester",
-                                                             WhenEntered = fn _ => return ()},
+                              val steps = {PlanningCalendar = {Label = "Planning calendar",
+                                                               WhenEntered = fn _ => return ()},
+                                           ReleaseCalendar = {Label = "Release calendar",
+                                                              WhenEntered = fn _ => return ()},
                                            PollingAboutOfficeHours = {Label = "Polling about office hours",
                                                                       WhenEntered = fn _ => return ()},
                                            SteadyState = {Label = "Steady state",
@@ -628,9 +631,9 @@ structure Private = struct
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           OhPoll.ui {Ballot = (), Voter = key}),
-         (Some "Todo",
+         (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
-         (Some "Calendar",
+         (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
           calUi),
 
          (case ps of
@@ -684,7 +687,7 @@ structure Private = struct
 
          (Some "Global Forum",
           GlobalForum.ui),
-         (Ui.when (st > make [#BeforeSemester] ()) "Grades",
+         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Grades",
           Ui.seq (Ui.h4 <xml>The range shows your possible final averages, based on grades earned on the remaining assignments.</xml>,
                   StudentGrades.ui u,
                   Ui.const <xml>
@@ -923,13 +926,13 @@ structure Private = struct
                        </xml>,
                                LabForum.ui {LabNum = lbr.LabNum})),
 
-                      (Ui.when (st > make [#BeforeSemester] ()) "Global Forum",
+                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
                        GlobalForum.ui),
                       (Some "Students",
                        Students.ui),
-                      (Ui.when (st > make [#BeforeSemester] ()) "Pset Time Stats",
+                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Time Stats",
                        TimeSpent.ui),
-                      (Ui.when (st > make [#BeforeSemester] ()) "Pset Suggestions",
+                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Suggestions",
                        Suggestions.ui),
                       (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
                        AllGrades.ui))
@@ -987,7 +990,7 @@ val main =
 
     Theme.tabbed "MIT 6.887, Spring 2016"
                  ((Some "Course Info",
-                   Ui.seq (Ui.const (if st = make [#BeforeSemester] () then
+                   Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
                                      else
                                          <xml><p>
@@ -995,7 +998,7 @@ val main =
                                            (requires an <a href="https://ist.mit.edu/certificates">MIT client certificate</a>)
                                          </p></xml>),
                            courseInfo)),
-                  (Some "Calendar",
+                  (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
                    calUi))
 
 val index = return <xml><body>
