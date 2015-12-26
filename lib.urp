@@ -7,7 +7,7 @@ safeGet Private/admin
 safeGet Private/staff
 safeGet Private/student
 safeGet Private/psetGrades
-safeGet PsetSub/AllFiles/retrieve
+safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
 alwaysInline App/Sm/next
 file /style.css style.css

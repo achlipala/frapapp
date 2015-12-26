@@ -153,6 +153,43 @@ structure Sm = LinearStateMachine.Make(struct
                                            val mayChange = amInstructor
                                        end)
 
+val showLectureNum = mkShow (fn {LectureNum = n : int} => "Lecture " ^ show n)
+
+structure LectureSub = Submission.Make(struct
+                                           val tab = lecture
+                                           con ukey = #UserName
+                                           val user = user
+                                           val whoami = u <- whoamiStaff; return (Some u)
+                                           val labels = {}
+
+                                           fun makeFilename k _ = "Lecture" ^ show k.LectureNum ^ ".v"
+                                           fun mayInspect _ = return True
+                                       end)
+
+val showLabNum = mkShow (fn {LabNum = n : int} => "Lab " ^ show n)
+
+structure LabSub = Submission.Make(struct
+                                       val tab = lab
+                                       con ukey = #UserName
+                                       val user = user
+                                       val whoami = u <- whoamiStaff; return (Some u)
+                                       val labels = {}
+
+                                       fun makeFilename k _ = "Lab" ^ show k.LabNum ^ ".v"
+                                       fun mayInspect _ = return True
+                                   end)
+
+structure PsetSpec = Submission.Make(struct
+                                       val tab = pset
+                                       con ukey = #UserName
+                                       val user = user
+                                       val whoami = u <- whoamiStaff; return (Some u)
+                                       val labels = {}
+
+                                       fun makeFilename k _ = "Pset" ^ show k.PsetNum ^ ".v"
+                                       fun mayInspect _ = return True
+                                   end)
+
 val courseInfo =
     Ui.const <xml>
       <div class="jumbotron">
@@ -300,6 +337,8 @@ structure LectureCal = Calendar.FromTable(struct
                                                                                         <h3>{[lec.When]}</h3>
                                                                       
                                                                                         {Widget.html lec.Description}
+
+                                                                                        
                                                                                       </xml>
                                                                                       <xml>Close</xml>);
                                                                      return <xml>
@@ -649,13 +688,20 @@ structure Private = struct
                             (PsetSub.newUpload {PsetNum = psr.PsetNum})}
            
             <hr/>
+
+            <h3>Specification</h3>
           </xml>),
-                  PsetSub.AllFiles.ui {Key = {PsetNum = psr.PsetNum}, User = u},
-                  Ui.const <xml>
-                    <hr/>
-                    <h2>Forum</h2>
-                  </xml>,
-                  PsetForum.ui {PsetNum = psr.PsetNum})),
+          PsetSpec.AllFilesAllUsers.ui {PsetNum = psr.PsetNum},
+          Ui.const <xml>
+            <hr/>
+            <h2>Your Submissions</h2>
+          </xml>,
+          PsetSub.AllFiles.ui {Key = {PsetNum = psr.PsetNum}, User = u},
+          Ui.const <xml>
+            <hr/>
+            <h2>Forum</h2>
+          </xml>,
+          PsetForum.ui {PsetNum = psr.PsetNum})),
 
          (case lec of
               None => None
@@ -666,7 +712,10 @@ structure Private = struct
             {Widget.html lecr.Description}
             
             <hr/>
-            
+          </xml>,
+          LectureSub.AllFilesAllUsers.ui {LectureNum = lecr.LectureNum},
+          Ui.const <xml>
+            <hr/>
             <h2>Forum</h2>
           </xml>,
                   LectureForum.ui {LectureNum = lecr.LectureNum})),
@@ -681,6 +730,11 @@ structure Private = struct
             
             <hr/>
             
+            <h2>Forum</h2>
+          </xml>,
+          LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
+          Ui.const <xml>
+            <hr/>
             <h2>Forum</h2>
           </xml>,
                   LabForum.ui {LabNum = lbr.LabNum})),
@@ -853,6 +907,17 @@ structure Private = struct
                                     When = minTime,
                                     Description = ""} lec);
 
+        nlec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle, lecture.When, lecture.Description
+                              FROM lecture
+                              WHERE lecture.When > CURRENT_TIMESTAMP
+                              ORDER BY lecture.When
+                              LIMIT 1);
+
+        nlecr <- return (Option.get {LectureNum = 0,
+                                     LectureTitle = "",
+                                     When = minTime,
+                                     Description = ""} nlec);
+
         lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
                             FROM lab
                             WHERE lab.When < CURRENT_TIMESTAMP
@@ -862,6 +927,16 @@ structure Private = struct
         lbr <- return (Option.get {LabNum = 0,
                                    When = minTime,
                                    Description = ""} lb);
+
+        nlb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
+                             FROM lab
+                             WHERE lab.When > CURRENT_TIMESTAMP
+                             ORDER BY lab.When
+                             LIMIT 1);
+
+        nlbr <- return (Option.get {LabNum = 0,
+                                    When = minTime,
+                                    Description = ""} nlb);
 
         ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
                             FROM pset
@@ -874,6 +949,17 @@ structure Private = struct
                                    Due = minTime,
                                    Instructions = ""} ps);
 
+        nps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
+                             FROM pset
+                             WHERE pset.Released > CURRENT_TIMESTAMP
+                             ORDER BY pset.Due
+                             LIMIT 1);
+
+        npsr <- return (Option.get {PsetNum = 0,
+                                    Released = minTime,
+                                    Due = minTime,
+                                    Instructions = ""} nps);
+
         Theme.tabbed "MIT 6.887, Spring 2016 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
@@ -883,6 +969,53 @@ structure Private = struct
                        StaffTodo.OneUser.ui u),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
+
+                      (case nlec of
+                           None => None
+                         | Some _ => Some "Next Lecture",
+                       Ui.seq (Ui.constM (fn ctx => <xml>
+                         <h2>Lecture {[nlecr.LectureNum]}: {[nlecr.LectureTitle]}</h2>
+                         <h3>{[nlecr.When]}</h3>
+                         {Widget.html nlecr.Description}
+
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
+                                         (LectureSub.newUpload {LectureNum = nlecr.LectureNum})}
+
+                         <hr/>
+                       </xml>),
+                               LectureSub.AllFilesAllUsers.ui {LectureNum = nlecr.LectureNum})),
+
+                      (case nlb of
+                           None => None
+                         | Some _ => Some "Next Lab",
+                       Ui.seq (Ui.constM (fn ctx => <xml>
+                         <h2>Lab {[nlbr.LabNum]}</h2>
+                         <h3>{[nlbr.When]}</h3>
+                         {Widget.html nlbr.Description}
+
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
+                                         (LabSub.newUpload {LabNum = nlbr.LabNum})}
+
+                         <hr/>
+                       </xml>),
+                               LabSub.AllFilesAllUsers.ui {LabNum = nlbr.LabNum})),
+
+                      (case nps of
+                           None => None
+                         | Some _ => Some "Next Pset",
+                       Ui.seq (Ui.constM (fn ctx => <xml>
+                         <h2>Pset {[npsr.PsetNum]}</h2>
+                         <h3>Released: {[npsr.Released]}<br/>
+                         Due: {[npsr.Due]}</h3>
+                         {Widget.html npsr.Instructions}
+
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
+                                         (PsetSpec.newUpload {PsetNum = npsr.PsetNum})}
+
+                         <hr/>
+                       </xml>),
+                               PsetSpec.AllFilesAllUsers.ui {PsetNum = npsr.PsetNum})),
+
                       (case ps of   
                            None => None
                          | Some _ => Some "Current Pset",
