@@ -801,6 +801,35 @@ structure Private = struct
                                                           FinalGrades.Forbidden)
                                       end)
 
+    structure TimeSpent = SimpleQuery.Make(struct
+                                               val submission = PsetSub.submission
+
+                                               val query = (SELECT AVG(submission.Hours) AS Avg, MAX(submission.Hours) AS Max, MIN(submission.Hours) AS Min, submission.PsetNum AS PsetNum
+                                                            FROM submission
+                                                              JOIN pset ON submission.PsetNum = pset.PsetNum
+                                                            WHERE pset.Due < CURRENT_TIMESTAMP
+                                                            GROUP BY submission.PsetNum
+                                                            ORDER BY submission.PsetNum)
+
+                                               val labels = {Avg = "Average",
+                                                             Max = "Maximum",
+                                                             Min = "Minimum",
+                                                             PsetNum = "Pset#"}
+                                           end)
+
+    structure Suggestions = SimpleQuery1.Make(struct
+                                                  val submission = PsetSub.submission
+                                                                   
+                                                  val query = (SELECT submission.Suggestions, submission.PsetNum
+                                                               FROM submission
+                                                                 JOIN pset ON submission.PsetNum = pset.PsetNum
+                                                               WHERE pset.Due < CURRENT_TIMESTAMP
+                                                               ORDER BY submission.PsetNum, submission.Suggestions)
+
+                                                  val labels = {Suggestions = "Suggestions",
+                                                                PsetNum = "Pset#"}
+                                              end)
+
     fun staff masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -894,10 +923,14 @@ structure Private = struct
                        </xml>,
                                LabForum.ui {LabNum = lbr.LabNum})),
 
-                      (Some "Global Forum",
+                      (Ui.when (st > make [#BeforeSemester] ()) "Global Forum",
                        GlobalForum.ui),
                       (Some "Students",
                        Students.ui),
+                      (Ui.when (st > make [#BeforeSemester] ()) "Pset Time Stats",
+                       TimeSpent.ui),
+                      (Ui.when (st > make [#BeforeSemester] ()) "Pset Suggestions",
+                       Suggestions.ui),
                       (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
                        AllGrades.ui))
 
