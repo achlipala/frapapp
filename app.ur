@@ -616,6 +616,7 @@ structure Private = struct
                                                      val users = user
                                                      val title = "Pset"
                                                      val ucond = (WHERE Users.IsStudent)
+                                                     val allowAnyUser = False
 
                                                      fun render r _ = <xml>{[r]}</xml>
                                                  end)
@@ -838,6 +839,57 @@ structure Private = struct
                                                  <xml><a link={psetGrades r.PsetNum r.PsetStudent}>Grade Pset {[r.PsetNum]} for {[r.PsetStudent]}</a></xml>
                                          end)
 
+    structure LectureUploadTodo = Todo.WithDueDate(struct
+                                                       con tag = #Lecture
+                                                       con due = #When
+                                                       con key = [LectureNum = _]
+                                                       val items = lecture
+                                                       val done = LectureSub.submission
+                                                       con ukey = #UserName
+                                                       val users = user
+                                                       val title = "Lecture"
+                                                       val ucond = (WHERE Users.IsInstructor)
+                                                       val allowAnyUser = True
+
+                                                       fun render r _ = <xml>{[r]}</xml>
+                                                   end)
+
+    structure LabUploadTodo = Todo.WithDueDate(struct
+                                                   con tag = #Lab
+                                                   con due = #When
+                                                   con key = [LabNum = _]
+                                                   val items = lab
+                                                   val done = LabSub.submission
+                                                   con ukey = #UserName
+                                                   val users = user
+                                                   val title = "Lab"
+                                                   val ucond = (WHERE Users.IsInstructor)
+                                                   val allowAnyUser = True
+
+                                                   fun render r _ = <xml>{[r]}</xml>
+                                               end)
+
+    structure PsetUploadTodo = Todo.WithDueDate(struct
+                                                    con tag = #Pset
+                                                    con due = #Released
+                                                    con key = [PsetNum = _]
+                                                    val items = pset
+                                                    val done = PsetSpec.submission
+                                                    con ukey = #UserName
+                                                    val users = user
+                                                    val title = "Pset"
+                                                    val ucond = (WHERE Users.IsInstructor)
+                                                    val allowAnyUser = True
+
+                                                    fun render r _ = <xml>{[r]}</xml>
+                                                end)
+
+    structure ContentTodo = Todo.Make(struct
+                                        val t = LectureUploadTodo.todo
+                                                    |> Todo.compose LabUploadTodo.todo
+                                                    |> Todo.compose PsetUploadTodo.todo
+                                    end)
+
     structure StaffTodo = Todo.Make(struct
                                         val t = LectureTodo.todo
                                                     |> Todo.compose LabTodo.todo
@@ -966,7 +1018,8 @@ structure Private = struct
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
                        Grades.ui),
                       (Some "Todo",
-                       StaffTodo.OneUser.ui u),
+                       Ui.seq (ContentTodo.OneUser.ui u,
+                               StaffTodo.OneUser.ui u)),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
 
