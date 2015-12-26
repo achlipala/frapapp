@@ -4,7 +4,8 @@ structure ThisTerm = Spring2016
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 
-table user : { Kerberos : string, MitId : string, UserName : string, IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool,
+table user : { Kerberos : string, MitId : string, UserName : string, Password : option string,
+               IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool,
                Units : string, SubjectNum : string, SectionNum : string, LastName : string, FirstName : string, MiddleInitial : string }
   PRIMARY KEY Kerberos,
   CONSTRAINT UserName UNIQUE UserName
@@ -33,8 +34,8 @@ task initialize = fn () =>
   if anyUsers then
       return ()
   else
-      dml (INSERT INTO user(Kerberos, MitId, UserName, IsInstructor, IsTA, IsStudent, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
-           VALUES ('adamc', '', 'Adam Chlipala', TRUE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
+      dml (INSERT INTO user(Kerberos, MitId, UserName, Password, IsInstructor, IsTA, IsStudent, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
+           VALUES ('adamc', '', 'Adam Chlipala', NULL, TRUE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
 
 structure Auth = MitCert.Make(struct
                                   con kerberos = #Kerberos
@@ -608,6 +609,7 @@ structure Private = struct
                                                 val tab = user
                                                 val labels = {Kerberos = "Kerberos",
                                                               UserName = "Name",
+                                                              Password = "Password",
                                                               IsInstructor = "Instructor?",
                                                               IsTA = "TA?",
                                                               IsStudent = "Student?",
@@ -842,7 +844,8 @@ structure Private = struct
     structure WS = WebSIS.Make(struct
                                    val user = user
 
-                                   val defaults = {IsInstructor = False,
+                                   val defaults = {Password = None,
+                                                   IsInstructor = False,
                                                    IsTA = False}
                                    val amAuthorized = amInstructor
                                    val expectedSubjectNumber = "6.887"
@@ -943,7 +946,7 @@ structure Private = struct
 
     structure Grades = MitGrades.Make(struct
                                           con groups = [IsInstructor, IsTA, HasDropped]
-                                          con others = [Kerberos = _]
+                                          con others = [Kerberos = _, Password = _]
                                           constraint [MitId, UserName, IsStudent, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
                                           val users = user
                                           val grades = gradeTree
@@ -1232,10 +1235,14 @@ val main =
                   (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
                    calUi))
 
+val login =
+    Theme.simple "MIT 6.887, non-MIT user login" Auth.Login.ui
+
 val index = return <xml><body>
   <a link={main}>Main</a>
   <a link={Private.admin}>Admin</a>
   <a link={Private.staff ""}>Staff</a>
   <a link={Private.student ""}>Student</a>
   <a link={Private.psetGrades 0 ""}>Grade</a>
+  <a link={login}>Login</a>
 </body></xml>
