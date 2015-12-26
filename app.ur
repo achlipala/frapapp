@@ -482,12 +482,57 @@ val forumAccess = staff <- amStaff;
         else
             return Discussion.Read
 
+fun onNewMessage kind getUsers r =
+    us <- getUsers;
+    us <- query (SELECT user.UserName
+                 FROM user
+                 WHERE user.IsInstructor OR user.IsTA)
+          (fn {User = {UserName = u}} us =>
+              return (if List.mem u us then
+                          us
+                      else
+                          u :: us)) us;
+    let
+        val hs = Mail.empty
+        val hs = Mail.from "MIT 6.887 <frap@csail.mit.edu>" hs
+        val hs = Mail.subject "New forum message" hs
+    in
+        hs <- query (SELECT user.UserName, user.Kerberos
+                     FROM user
+                     WHERE {List.foldl (fn name p =>
+                         (WHERE user.UserName = {[name]} OR {p})) (WHERE FALSE) us})
+              (fn {User = {UserName = name, Kerberos = kerb}} hs =>
+                  let
+                      val email =
+                          case String.index kerb #"@" of
+                              Some _ => kerb
+                            | None => kerb ^ "@mit.edu"
+                  in
+                      return (Mail.to (name ^ " <" ^ email ^ ">") hs)
+                  end) hs;
+        let
+            val textm = "Let it be known that there is a new MIT 6.887 "
+                        ^ kind
+                        ^ " forum message posted by "
+                        ^ r.Who
+                        ^ " in the thread \""
+                        ^ r.Subject
+                        ^ ".\"\n"
+
+            val htmlm = <xml>
+              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.887</a> {[kind]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
+            </xml>
+        in
+            Mail.send hs textm (Some htmlm)
+        end
+    end
+
 structure GlobalForum = GlobalDiscussion.Make(struct
                                                   val text = Widget.htmlbox
                                                   val access = forumAccess
                                                   val showOpenVsClosed = True
                                                   val allowPrivate = True
-                                                  fun onNewMessage _ = return ()
+                                                  val onNewMessage = onNewMessage "global"
                                               end)
 
 structure LectureForum = TableDiscussion.Make(struct
@@ -500,7 +545,7 @@ structure LectureForum = TableDiscussion.Make(struct
                                                   fun access _ = forumAccess
                                                   val showOpenVsClosed = True
                                                   val allowPrivate = True
-                                                  fun onNewMessage _ = return ()
+                                                  val onNewMessage = onNewMessage "lecture"
                                               end)
 
 structure LabForum = TableDiscussion.Make(struct
@@ -513,7 +558,7 @@ structure LabForum = TableDiscussion.Make(struct
                                               fun access _ = forumAccess
                                               val showOpenVsClosed = True
                                               val allowPrivate = True
-                                              fun onNewMessage _ = return ()
+                                              val onNewMessage = onNewMessage "lab"
                                           end)
 
 structure PsetForum = TableDiscussion.Make(struct
@@ -526,7 +571,7 @@ structure PsetForum = TableDiscussion.Make(struct
                                                fun access _ = forumAccess
                                                val showOpenVsClosed = True
                                                val allowPrivate = True
-                                               fun onNewMessage _ = return ()
+                                               val onNewMessage = onNewMessage "pset"
                                            end)
 
 structure LectureTodo = Todo.Happenings(struct
@@ -885,9 +930,9 @@ structure Private = struct
                                                 end)
 
     structure ContentTodo = Todo.Make(struct
-                                        val t = LectureUploadTodo.todo
-                                                    |> Todo.compose LabUploadTodo.todo
-                                                    |> Todo.compose PsetUploadTodo.todo
+                                          val t = LectureUploadTodo.todo
+                                                      |> Todo.compose LabUploadTodo.todo
+                                                      |> Todo.compose PsetUploadTodo.todo
                                     end)
 
     structure StaffTodo = Todo.Make(struct

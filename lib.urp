@@ -1,4 +1,5 @@
 library style
+library $/mail
 rewrite relation App/*
 rewrite url App/*
 rewrite style App/*
@@ -27,5 +28,6 @@ allow url https://coq.inria.fr/distrib/current/stdlib/
 allow url http://www.cis.upenn.edu/~bcpierce/sf/
 allow url http://www.amazon.com/Practical-Foundations-Programming-Languages-Professor/dp/1107029570
 allow url https://ist.mit.edu/certificates
+allow url https://frap.csail.mit.edu/Private/student
 
 app
