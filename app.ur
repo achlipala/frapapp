@@ -3,6 +3,7 @@ structure Theme = Ui.Make(Style)
 structure ThisTerm = Spring2016
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
+val mailFrom = "MIT 6.887 <frap@csail.mit.edu>"
 
 table user : { Kerberos : string, MitId : string, UserName : string, Password : option string,
                IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool,
@@ -493,10 +494,16 @@ fun onNewMessage kind getUsers r =
                           us
                       else
                           u :: us)) us;
+
+    u <- Auth.whoami;
     let
+        val us = case u of
+                     None => error <xml>Posting message while not logged in</xml>
+                   | Some u => List.filter (fn u' => u' <> u) us
+
         val hs = Mail.empty
-        val hs = Mail.from "MIT 6.887 <frap@csail.mit.edu>" hs
-        val hs = Mail.subject "New forum message" hs
+                     |> Mail.from mailFrom
+                     |> Mail.subject "New forum message"
     in
         hs <- query (SELECT user.UserName, user.Kerberos
                      FROM user
