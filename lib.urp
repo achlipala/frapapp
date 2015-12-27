@@ -14,20 +14,7 @@ alwaysInline App/Sm/next
 file /style.css style.css
 timeFormat %m/%d/%Y %I:%M %p
 allow mime text/x-verilog
-allow url http://adam.chlipala.net/
-allow url http://people.csail.mit.edu/wangpeng/
-allow url http://stellar.mit.edu/S/course/6/fa15/6.820/
-allow url https://github.com/achlipala/frapapp
-allow url http://coq.inria.fr/
-allow url http://adam.chlipala.net/cpdt/
-allow url https://www.labri.fr/perso/casteran/CoqArt/
-allow url https://www.cis.upenn.edu/~bcpierce/tapl/
-allow url https://mitpress.mit.edu/books/formal-semantics-programming-languages
-allow url https://coq.inria.fr/distrib/current/refman/
-allow url https://coq.inria.fr/distrib/current/stdlib/
-allow url http://www.cis.upenn.edu/~bcpierce/sf/
-allow url http://www.amazon.com/Practical-Foundations-Programming-Languages-Professor/dp/1107029570
-allow url https://ist.mit.edu/certificates
-allow url https://frap.csail.mit.edu/Private/student
+allow url http://*
+allow url https://*
 
 app

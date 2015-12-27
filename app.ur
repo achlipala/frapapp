@@ -484,6 +484,14 @@ val forumAccess = staff <- amStaff;
         else
             return Discussion.Read
 
+fun emailOf kerb =
+    case String.index kerb #"@" of
+        Some _ => kerb
+      | None => kerb ^ "@mit.edu"
+
+fun toOf {UserName = name, Kerberos = kerb} =
+    name ^ " <" ^ emailOf kerb ^ ">"
+
 fun onNewMessage kind getUsers r =
     us <- getUsers;
     us <- query (SELECT user.UserName
@@ -510,14 +518,7 @@ fun onNewMessage kind getUsers r =
                      WHERE {List.foldl (fn name p =>
                          (WHERE user.UserName = {[name]} OR {p})) (WHERE FALSE) us})
               (fn {User = {UserName = name, Kerberos = kerb}} hs =>
-                  let
-                      val email =
-                          case String.index kerb #"@" of
-                              Some _ => kerb
-                            | None => kerb ^ "@mit.edu"
-                  in
-                      return (Mail.to (name ^ " <" ^ email ^ ">") hs)
-                  end) hs;
+                  return (Mail.to (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
         let
             val textm = "Let it be known that there is a new MIT 6.887 "
                         ^ kind
@@ -616,6 +617,31 @@ structure Ann = News.Make(struct
                                       return (News.Admin {User = u})
                                   else
                                       return News.Read
+
+                              fun onNewPost r =
+                                  let
+                                      val hs = Mail.empty
+                                                   |> Mail.from mailFrom
+                                                   |> Mail.to mailFrom
+                                                   |> Mail.subject ("Announcement: " ^ r.Title)
+                                  in
+                                      hs <- query (SELECT user.UserName, user.Kerberos
+                                                   FROM user
+                                                   WHERE NOT user.HasDropped)
+                                                  (fn {User = r} hs =>
+                                                      return (Mail.bcc (toOf r) hs)) hs;
+                                      let
+                                          val textm = Html.unhtml r.Body
+
+                                          val htmlm = <xml>
+                                            {Widget.html r.Body}
+
+                                            <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.887 site</a></p>
+                                          </xml>
+                                      in
+                                          Mail.send hs textm (Some htmlm)
+                                      end
+                                  end
                           end)
 
 structure Private = struct
