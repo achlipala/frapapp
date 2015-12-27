@@ -599,6 +599,18 @@ structure LabTodo = Todo.Happenings(struct
                                         fun render r = <xml>{[r]}</xml>
                                     end)
 
+structure Ann = News.Make(struct
+                              val title = Widget.textbox
+                              val body = Widget.htmlbox
+
+                              val access = staff <- amStaff;
+                                  if staff then
+                                      u <- Auth.getUserWithMasquerade;
+                                      return (News.Admin {User = u})
+                                  else
+                                      return News.Read
+                          end)
+
 structure Private = struct
 
     val adminPerm =
@@ -722,6 +734,8 @@ structure Private = struct
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
           calUi),
+         (Some "News",
+          Ann.ui),
 
          (case ps of
               None => None
@@ -1070,6 +1084,8 @@ structure Private = struct
                                StaffTodo.OneUser.ui u)),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
+                      (Some "News",
+                       Ann.ui),
 
                       (case nlec of
                            None => None
