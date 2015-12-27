@@ -511,6 +511,7 @@ fun onNewMessage kind getUsers r =
 
         val hs = Mail.empty
                      |> Mail.from mailFrom
+                     |> Mail.to mailFrom
                      |> Mail.subject "New forum message"
     in
         hs <- query (SELECT user.UserName, user.Kerberos
@@ -518,7 +519,7 @@ fun onNewMessage kind getUsers r =
                      WHERE {List.foldl (fn name p =>
                          (WHERE user.UserName = {[name]} OR {p})) (WHERE FALSE) us})
               (fn {User = {UserName = name, Kerberos = kerb}} hs =>
-                  return (Mail.to (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
+                  return (Mail.bcc (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
         let
             val textm = "Let it be known that there is a new MIT 6.887 "
                         ^ kind
