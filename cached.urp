@@ -1,0 +1,15 @@
+# Note: symlink directory "cached" and file "cached.ur" from UPO, after populating the former there.
+library $/upo_mit/spring2016
+file /bootstrap.min.css cached/bootstrap.min.css
+file /jquery-2.1.4.min.js cached/jquery-2.1.4.min.js
+file /bootstrap.min.js cached/bootstrap.min.js
+file /ckeditor.js cached/ckeditor.js
+script /jquery-2.1.4.min.js
+script /bootstrap.min.js
+script /ckeditor.js
+file /style.css style.css
+file /fonts/glyphicons-halflings-regular.woff2 cached/glyphicons-halflings-regular.woff2
+file /fonts/glyphicons-halflings-regular.woff cached/glyphicons-halflings-regular.woff
+file /fonts/glyphicons-halflings-regular.ttf cached/glyphicons-halflings-regular.ttf
+
+cached
