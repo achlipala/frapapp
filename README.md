@@ -1,6 +1,6 @@
 # Formal Reasoning About Programs course web app
 
-This is the software running [a course at MIT](https://frap.csail.mit.edu/), based on [the Ur/Web language](http://www.impredicative.com/ur/) and [the UPO library](http://upo.csail.mit.edu/).  The primary author is [Adam Chlipala](http://adam.chlipala.net/).
+This is the software running [a course at MIT](https://frap.csail.mit.edu/), based on [the Ur/Web language](http://www.impredicative.com/ur/) and [the UPO library](http://upo.csail.mit.edu/) (with [MIT extensions](https://github.com/achlipala/upo_mit)).  The primary author is [Adam Chlipala](http://adam.chlipala.net/).
 
 ## Notes on setting up MIT client-certificate authentication with Apache
 
