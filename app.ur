@@ -6,7 +6,7 @@ val calBounds = {FromDay = ThisTerm.regDay,
 val mailFrom = "MIT 6.887 <frap@csail.mit.edu>"
 
 table user : { Kerberos : string, MitId : string, UserName : string, Password : option string,
-               IsInstructor : bool, IsTA : bool, IsStudent : bool, HasDropped : bool,
+               IsInstructor : bool, IsTA : bool, IsStudent : bool, IsListener : bool, HasDropped : bool,
                Units : string, SubjectNum : string, SectionNum : string, LastName : string, FirstName : string, MiddleInitial : string }
   PRIMARY KEY Kerberos,
   CONSTRAINT UserName UNIQUE UserName
@@ -35,17 +35,18 @@ task initialize = fn () =>
   if anyUsers then
       return ()
   else
-      dml (INSERT INTO user(Kerberos, MitId, UserName, Password, IsInstructor, IsTA, IsStudent, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
-           VALUES ('adamc', '', 'Adam Chlipala', NULL, TRUE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
+      dml (INSERT INTO user(Kerberos, MitId, UserName, Password, IsInstructor, IsTA, IsStudent, IsListener, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
+           VALUES ('adamc', '', 'Adam Chlipala', NULL, TRUE, FALSE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
 
 structure Auth = MitCert.Make(struct
                                   con kerberos = #Kerberos
                                   con commonName = #UserName
-                                  con groups = [IsInstructor, IsTA, IsStudent, HasDropped]
+                                  con groups = [IsInstructor, IsTA, IsStudent, IsListener, HasDropped]
                                   val users = user
                                   val defaults = Some {IsInstructor = False,
                                                        IsTA = False,
                                                        IsStudent = False,
+                                                       IsListener = False,
                                                        HasDropped = False,
                                                        MitId = "",
                                                        Units = "",
@@ -74,10 +75,11 @@ val instructorOnly =
                 Calendar.Read)
 
 val gStudent = make [#IsStudent] ()
+val gListener = make [#IsListener] ()
 val gTA = make [#IsTA] ()
-val gsStudent = (gInstructor, gTA, gStudent)
+val gsStudent = (gInstructor, gTA, gStudent, gListener)
 val whoamiStudent = Auth.getGroupsWithMasquerade gsStudent
-val amStudent = Auth.inGroup gStudent
+val amStudent = Auth.inGroups (gStudent, gListener)
 
 val gsStaff = (gInstructor, gTA)
 val whoamiStaff = Auth.getGroups gsStaff
@@ -630,7 +632,10 @@ structure Ann = News.Make(struct
                                   in
                                       hs <- query (SELECT user.UserName, user.Kerberos
                                                    FROM user
-                                                   WHERE NOT user.HasDropped)
+                                                   WHERE user.IsInstructor
+                                                     OR user.IsTA
+                                                     OR user.IsStudent
+                                                     OR user.IsListener)
                                                   (fn {User = r} hs =>
                                                       return (Mail.bcc (toOf r) hs)) hs;
                                       let
@@ -661,6 +666,7 @@ structure Private = struct
                                                               IsInstructor = "Instructor?",
                                                               IsTA = "TA?",
                                                               IsStudent = "Student?",
+                                                              IsListener = "Listener?",
                                                               HasDropped = "Dropped?",
                                                               MitId = "MIT ID",
                                                               Units = "Units",
@@ -998,7 +1004,7 @@ structure Private = struct
     structure Grades = MitGrades.Make(struct
                                           con groups = [IsInstructor, IsTA, HasDropped]
                                           con others = [Kerberos = _, Password = _]
-                                          constraint [MitId, UserName, IsStudent, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
+                                          constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
                                           val users = user
                                           val grades = gradeTree
                                           val access =
