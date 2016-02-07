@@ -211,6 +211,8 @@ val courseInfo =
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 34-304</td> </tr>
       </table>
 
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/wangpengmit/6887psets">GitHub repo with problem sets and lab code</a></h3>
+
       <h2>What's it all about?</h2>
 
       <p><i>Briefly</i>, this course is about an approach to bringing software engineering up to speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
