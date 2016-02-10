@@ -846,6 +846,11 @@ structure Private = struct
           </xml>,
                   LabForum.ui {LabNum = lbr.LabNum})),
 
+         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Files",
+          PsetSpec.AllFilesAllKeys.ui),
+         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Lab Files",
+          LabSub.AllFilesAllKeys.ui),
+
          (Some "Global Forum",
           GlobalForum.ui),
          (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Grades",
@@ -1108,6 +1113,17 @@ structure Private = struct
                                    Due = minTime,
                                    Instructions = ""} ps);
 
+        lps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
+                             FROM pset
+                             WHERE pset.Due <= CURRENT_TIMESTAMP
+                             ORDER BY pset.Due DESC
+                             LIMIT 1);
+
+        lpsr <- return (Option.get {PsetNum = 0,
+                                    Released = minTime,
+                                    Due = minTime,
+                                    Instructions = ""} lps);
+
         nps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
                              FROM pset
                              WHERE pset.Released > CURRENT_TIMESTAMP
@@ -1192,6 +1208,22 @@ structure Private = struct
                          <h2>Forum</h2>
                        </xml>,
                        PsetForum.ui {PsetNum = psr.PsetNum})),
+
+                      (case lps of
+                           None => None
+                         | Some _ => Some "Last Pset",
+                       Ui.seq (Ui.constM (fn ctx => <xml>
+                         <h2>Pset {[lpsr.PsetNum]}</h2>
+                         <h3>Released: {[lpsr.Released]}<br/>
+                         Due: {[lpsr.Due]}</h3>
+                         {Widget.html lpsr.Instructions}
+
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
+                                         (PsetSpec.newUpload {PsetNum = lpsr.PsetNum})}
+
+                         <hr/>
+                       </xml>),
+                               PsetSpec.AllFilesAllUsers.ui {PsetNum = lpsr.PsetNum})),
 
                       (case lec of
                            None => None
