@@ -830,15 +830,18 @@ structure Private = struct
          (case lb of
               None => None
             | Some _ => Some "Last Lab",
-          Ui.seq (Ui.const <xml>
+          Ui.seq (Ui.constM (fn ctx => <xml>
             <h2>Lab {[lbr.LabNum]}</h2>
             <h3>{[lbr.When]}</h3>
             {Widget.html lbr.Description}
             
+            {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
+                            (LabSub.newUpload {LabNum = lbr.LabNum})}
+
             <hr/>
             
             <h2>Forum</h2>
-          </xml>,
+          </xml>),
           LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
           Ui.const <xml>
             <hr/>
@@ -1242,15 +1245,18 @@ structure Private = struct
                       (case lb of
                            None => None
                          | Some _ => Some "Last Lab",
-                       Ui.seq (Ui.const <xml>
+                       Ui.seq (Ui.constM (fn ctx => <xml>
                          <h2>Lab {[lbr.LabNum]}</h2>
                          <h3>{[lbr.When]}</h3>
                          {Widget.html lbr.Description}
 
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
+                                         (LabSub.newUpload {LabNum = lbr.LabNum})}
+
                          <hr/>
 
                          <h2>Forum</h2>
-                       </xml>,
+                       </xml>),
                                LabForum.ui {LabNum = lbr.LabNum})),
 
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
