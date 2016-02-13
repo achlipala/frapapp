@@ -730,6 +730,57 @@ structure Private = struct
                                                       |> Todo.compose PsetTodoStudent.todo
                                       end)
 
+    fun oldPset id =
+        u <- whoamiStudent;
+        ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
+                       FROM pset
+                       WHERE pset.PsetNum = {[id]});
+        Theme.simple ("MIT 6.887: Pset " ^ show id) (Ui.seq
+          (Ui.constM (fn ctx => <xml>
+            <h2>Pset {[id]}</h2>
+            <h3>Released: {[ps.Released]}<br/>
+              Due: {[ps.Due]}</h3>
+              {Widget.html ps.Instructions}<br/>
+
+              {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>New Submission</xml>
+                              (PsetSub.newUpload {PsetNum = id})}
+              
+              <hr/>
+
+              <h3>Specification</h3>
+          </xml>),
+          PsetSpec.AllFilesAllUsers.ui {PsetNum = id},
+          Ui.const <xml>
+            <hr/>
+            <h2>Your Submissions</h2>
+          </xml>,
+          PsetSub.AllFiles.ui {Key = {PsetNum = id}, User = u},
+          Ui.const <xml>
+            <hr/>
+            <h2>Forum</h2>
+          </xml>,
+          PsetForum.ui {PsetNum = id}))
+
+    fun oldLab id =
+        u <- whoamiStudent;
+        lb <- oneRow1 (SELECT lab.When, lab.Description
+                       FROM lab
+                       WHERE lab.LabNum = {[id]});
+        Theme.simple ("MIT 6.887: Lab " ^ show id) (Ui.seq
+          (Ui.const <xml>
+            <h2>Lab {[id]}</h2>
+            <h3>{[lb.When]}</h3>
+            {Widget.html lb.Description}
+
+            <hr/>
+          </xml>,
+          LabSub.AllFilesAllUsers.ui {LabNum = id},
+          Ui.const <xml>
+            <hr/>
+            <h2>Forum</h2>
+          </xml>,
+          LabForum.ui {LabNum = id}))
+
     fun student masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -770,6 +821,18 @@ structure Private = struct
                                    Released = minTime,
                                    Due = minTime,
                                    Instructions = ""} ps);
+
+        oldPsets <- queryX1 (SELECT pset.PsetNum
+                             FROM pset
+                             WHERE pset.Due < CURRENT_TIMESTAMP
+                             ORDER BY pset.Due)
+                            (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
+
+        oldLabs <- queryX1 (SELECT lab.LabNum
+                            FROM lab
+                            WHERE lab.When < CURRENT_TIMESTAMP
+                            ORDER BY lab.When)
+                           (fn r => <xml><tr><td><a link={oldLab r.LabNum}>{[r]}</a></td></tr></xml>);
 
         Theme.tabbed "MIT 6.887, Spring 2016, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
@@ -864,6 +927,18 @@ structure Private = struct
                     <h3>Feedback</h3>
                   </xml>,
                   PsetGrade.Several.ui (WHERE T.PsetStudent = {[u]}))),
+         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
+          Ui.const <xml>
+            <table class="bs3-table table-striped">
+              {oldPsets}
+            </table>
+          </xml>),
+         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Labs",
+          Ui.const <xml>
+            <table class="bs3-table table-striped">
+              {oldLabs}
+            </table>
+          </xml>),
          (Some "Course Info",
           courseInfo))
 

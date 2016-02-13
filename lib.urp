@@ -8,6 +8,8 @@ safeGet Private/admin
 safeGet Private/staff
 safeGet Private/student
 safeGet Private/psetGrades
+safeGet Private/oldPset
+safeGet Private/oldLab
 safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
 alwaysInline App/Sm/next
