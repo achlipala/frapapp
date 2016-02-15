@@ -1124,6 +1124,7 @@ structure Private = struct
                                                                FROM submission
                                                                  JOIN pset ON submission.PsetNum = pset.PsetNum
                                                                WHERE pset.Due < CURRENT_TIMESTAMP
+                                                                 AND submission.Suggestions <> ''
                                                                ORDER BY submission.PsetNum, submission.Suggestions)
 
                                                   val labels = {Suggestions = "Suggestions",
