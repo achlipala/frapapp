@@ -1343,7 +1343,9 @@ structure Private = struct
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Suggestions",
                        Suggestions.ui),
                       (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
-                       AllGrades.ui))
+                       AllGrades.ui),
+                      (Ui.when (st = make [#SteadyState] ()) "Poll on Favorite Office-Hours Times",
+                       OhPoll.ui {Ballot = (), Voter = key}))
 
     val admin =
         requireInstructor;
