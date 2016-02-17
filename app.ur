@@ -903,8 +903,6 @@ structure Private = struct
                             (LabSub.newUpload {LabNum = lbr.LabNum})}
 
             <hr/>
-            
-            <h2>Forum</h2>
           </xml>),
           LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
           Ui.const <xml>
