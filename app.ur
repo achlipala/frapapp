@@ -1276,16 +1276,19 @@ structure Private = struct
                       (case ps of   
                            None => None
                          | Some _ => Some "Current Pset",
-                       Ui.seq (Ui.const <xml>
+                       Ui.seq (Ui.constM (fn ctx => <xml>
                          <h2>Pset {[psr.PsetNum]}</h2>
                          <h3>Released: {[psr.Released]}<br/>
                          Due: {[psr.Due]}</h3>
                          {Widget.html psr.Instructions}
 
+                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
+                                         (PsetSpec.newUpload {PsetNum = psr.PsetNum})}
+
                          <hr/>
 
                          <h2>Forum</h2>
-                       </xml>,
+                       </xml>),
                        PsetForum.ui {PsetNum = psr.PsetNum})),
 
                       (case lps of
@@ -1330,9 +1333,13 @@ structure Private = struct
                                          (LabSub.newUpload {LabNum = lbr.LabNum})}
 
                          <hr/>
+                       </xml>),
+                               LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
+                       Ui.const <xml>
+                         <hr/>
 
                          <h2>Forum</h2>
-                       </xml>),
+                       </xml>,
                                LabForum.ui {LabNum = lbr.LabNum})),
 
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
