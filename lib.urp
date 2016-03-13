@@ -13,6 +13,8 @@ safeGet Private/oldLab
 safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
 alwaysInline App/Sm/next
+alwaysInline Auth/variantToExp
+alwaysInline Auth/inGroup
 file /style.css style.css
 timeFormat %m/%d/%Y %I:%M %p
 allow mime text/x-verilog
