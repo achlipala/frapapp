@@ -1103,8 +1103,11 @@ structure Private = struct
     structure TimeSpent = SimpleQuery.Make(struct
                                                val submission = PsetSub.submission
 
-                                               val query = (SELECT AVG(submission.Hours) AS Avg, MAX(submission.Hours) AS Max, MIN(submission.Hours) AS Min, submission.PsetNum AS PsetNum
-                                                            FROM submission
+                                               val query = (SELECT AVG(submission.Hours) AS Avg, MAX(submission.Hours) AS Max, MIN(submission.Hours) AS Min, COUNT( * ) AS Count, submission.PsetNum AS PsetNum
+                                                            FROM (SELECT submission.PsetNum AS PsetNum, MAX(submission.Hours) AS Hours
+                                                                  FROM submission
+                                                                  WHERE submission.Hours > 0
+                                                                  GROUP BY submission.PsetNum, submission.UserName) AS Submission
                                                               JOIN pset ON submission.PsetNum = pset.PsetNum
                                                             WHERE pset.Due < CURRENT_TIMESTAMP
                                                             GROUP BY submission.PsetNum
@@ -1113,6 +1116,7 @@ structure Private = struct
                                                val labels = {Avg = "Average",
                                                              Max = "Maximum",
                                                              Min = "Minimum",
+                                                             Count = "Count",
                                                              PsetNum = "Pset#"}
                                            end)
 
