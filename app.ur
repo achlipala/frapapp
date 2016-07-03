@@ -28,64 +28,14 @@ table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Ins
 table officeHours : { OhUser : string, When : time }
   PRIMARY KEY When
 
-(* Bootstrap the database with an initial admin user. *)
-task initialize = fn () =>
-  anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
-                        FROM user);
-  if anyUsers then
-      return ()
-  else
-      dml (INSERT INTO user(Kerberos, MitId, UserName, Password, IsInstructor, IsTA, IsStudent, IsListener, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
-           VALUES ('adamc', '', 'Adam Chlipala', NULL, TRUE, FALSE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
+val whoami' = return (Some {UserName = "adamc"})
 
-structure Auth = MitCert.Make(struct
-                                  con kerberos = #Kerberos
-                                  con commonName = #UserName
-                                  con groups = [IsInstructor, IsTA, IsStudent, IsListener, HasDropped]
-                                  val users = user
-                                  val defaults = Some {IsInstructor = False,
-                                                       IsTA = False,
-                                                       IsStudent = False,
-                                                       IsListener = False,
-                                                       HasDropped = False,
-                                                       MitId = "",
-                                                       Units = "",
-                                                       SubjectNum = "",
-                                                       SectionNum = "",
-                                                       LastName = "",
-                                                       FirstName = "",
-                                                       MiddleInitial = ""}
-                                  val allowMasquerade = Some (make [#IsInstructor] ())
-                                  val requireSsl = True
-                              end)
+val amInstructor = return True
+val instructorOnly = return Calendar.Write
 
-val whoami' = s <- Auth.whoamiWithMasquerade;
-    return (case s of
-                None => None
-              | Some s => Some {UserName = s})
+val whoamiStudent = return "adamc"
 
-val gInstructor = make [#IsInstructor] ()
-val amInstructor = Auth.inGroup gInstructor
-val requireInstructor = Auth.requireGroup gInstructor
-val instructorOnly =
-    b <- amInstructor;
-    return (if b then
-                Calendar.Write
-            else
-                Calendar.Read)
-
-val gStudent = make [#IsStudent] ()
-val gListener = make [#IsListener] ()
-val gTA = make [#IsTA] ()
-val gsStudent = (gInstructor, gTA, gStudent, gListener)
-val whoamiStudent = Auth.getGroupsWithMasquerade gsStudent
-val amStudent = Auth.inGroups (gStudent, gListener)
-
-val gsStaff = (gInstructor, gTA)
-val whoamiStaff = Auth.getGroups gsStaff
-val amStaff = Auth.inGroups gsStaff
-val requireStaff = Auth.requireGroups gsStaff
-val getStaff = Auth.getGroupsWithMasquerade gsStaff
+val whoamiStaff = return "adamc"
 
 val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
 
@@ -93,20 +43,14 @@ structure PsetSub = Submission.Make(struct
                                         val tab = pset
                                         con ukey = #UserName
                                         val user = user
-                                        val whoami = Auth.whoamiWithMasquerade
+                                        val whoami = return (Some "adamc")
                                         con fs = [Hours = (int, _, _),
                                                   Suggestions = (string, _, _)]
                                         val labels = {Hours = "Hours spent on the pset (round to nearest integer)",
                                                       Suggestions = "Suggestions for improving the pset"}
 
                                         fun makeFilename k u = "ps" ^ show k.PsetNum ^ "_" ^ u ^ ".v"
-                                        fun mayInspect uo =
-                                            staff <- amStaff;
-                                            if staff then
-                                                return True
-                                            else
-                                                u <- whoamiStudent;
-                                                return (uo = Some u)
+                                        fun mayInspect _ = return True
                                     end)
 
 table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When : time, Grade : int, Comment : string }
@@ -480,17 +424,7 @@ val calUi = Ui.seq (Ui.h4 <xml>
   Adam's office hours are in 32-G842.
 </xml>, PublicCal.ui calBounds)
 
-val forumAccess = staff <- amStaff;
-    if staff then
-        u <- Auth.getUserWithMasquerade;
-        return (Discussion.Admin {User = u})
-    else
-        student <- amStudent;
-        if student then
-            u <- Auth.getUserWithMasquerade;
-            return (Discussion.Post {User = u, MayEdit = True, MayDelete = True, MayMarkClosed = True})
-        else
-            return Discussion.Read
+val forumAccess = return (Discussion.Admin {User = "adamc"})
 
 fun emailOf kerb =
     case String.index kerb #"@" of
@@ -511,7 +445,7 @@ fun onNewMessage kind getUsers r =
                       else
                           u :: us)) us;
 
-    u <- Auth.whoami;
+    u <- return (Some "adamc");
     let
         val us = case u of
                      None => error <xml>Posting message while not logged in</xml>
@@ -620,12 +554,7 @@ structure Ann = News.Make(struct
                               val title = Widget.textbox
                               val body = Widget.htmlbox
 
-                              val access = staff <- amStaff;
-                                  if staff then
-                                      u <- Auth.getUserWithMasquerade;
-                                      return (News.Admin {User = u})
-                                  else
-                                      return News.Read
+                              val access = return (News.Admin {User = "adamc"})
 
                               fun onNewPost r =
                                   let
@@ -783,11 +712,7 @@ structure Private = struct
           </xml>,
           LabForum.ui {LabNum = id}))
 
-    fun student masqAs =
-        (case masqAs of
-             "" => Auth.unmasquerade
-           | _ => Auth.masqueradeAs masqAs);
-
+    val student =
         u <- whoamiStudent;
         key <- return {UserName = u};
         st <- Sm.current;
@@ -942,495 +867,8 @@ structure Private = struct
          (Some "Course Info",
           courseInfo))
 
-    structure PsetCal = Calendar.FromTable(struct
-                                               con tag = #Pset
-                                               con key = [PsetNum = _]
-                                               con times = [Released, Due, GradesDue]
-                                               val tab = pset
-                                               val title = "Pset"
-                                               val labels = {PsetNum = "Pset#",
-                                                             Instructions = "Instructions",
-                                                             Released = "Released",
-                                                             Due = "Due",
-                                                             GradesDue = "Grades due"}
-                                               val kinds = {Released = "released", Due = "due", GradesDue = "grades due"}
-                                               val ws = {Instructions = Widget.htmlbox} ++ _
-                                               val display = Some (fn ctx r =>
-                                                                      content <- source <xml/>;
-                                                                      lb <- rpc (getPset r.PsetNum);
-                                                                      set content (Ui.simpleModal
-                                                                                       <xml>
-                                                                                         <h2>Pset #{[r.PsetNum]}</h2>
-                                                                                         <h3>Released {[lb.Released]}<br/>
-                                                                                         Due {[lb.Due]}</h3>
-                                                                                         
-                                                                                         {Widget.html lb.Instructions}
-                                                                                       </xml>
-                                                                                       <xml>Close</xml>);
-                                                                      return <xml>
-                                                                        <dyn signal={signal content}/>
-                                                                      </xml>)
-
-                                               val auth = instructorOnly
-                                               val showTime = True
-                                           end)
-
-    structure AdminCal = Calendar.Make(struct
-                                           val t = ThisTerm.cal
-                                                       |> Calendar.compose OhCal.cal
-                                                       |> Calendar.compose PsetCal.cal
-                                                       |> Calendar.compose LabCal.cal
-                                                       |> Calendar.compose LectureCal.cal
-                                       end)
-
-    structure WS = WebSIS.Make(struct
-                                   val user = user
-
-                                   val defaults = {Password = None,
-                                                   IsInstructor = False,
-                                                   IsTA = False}
-                                   val amAuthorized = amInstructor
-                                   val expectedSubjectNumber = "6.887"
-                               end)
-
-    fun psetGrades n u =
-        requireStaff;
-        Theme.simple ("Grading Pset #" ^ show n ^ ", " ^ u)
-                     (Ui.seq
-                          (PsetSub.AllFiles.ui {Key = {PsetNum = n}, User = u},
-                           PsetGrade.One.ui {PsetNum = n, PsetStudent = u}))
-
-    structure Students = SimpleQuery1.Make(struct
-                                               val query = (SELECT user.Kerberos, user.UserName
-                                                            FROM user
-                                                            WHERE user.IsStudent
-                                                            ORDER BY user.UserName DESC)
-
-                                               val labels = {Kerberos = "Kerberos",
-                                                             UserName = "Name"}
-                                           end)
-
-    structure GradingTodo = Todo.Grading(struct
-                                             con tag = #Grading
-                                             con akey = [PsetNum = _]
-                                             con due = #GradesDue
-                                             con ukey = #UserName
-                                             con guser = #PsetStudent
-
-                                             val assignments = pset
-                                             val acond = (WHERE Assignments.Due < CURRENT_TIMESTAMP)
-                                             val users = user
-                                             val ucond = (WHERE Users.IsStudent)
-                                             val grades = psetGrade
-                                             val gcond = (WHERE Graders.IsTA)
-
-                                             val title = "Grading"
-                                             fun render r u =
-                                                 <xml><a link={psetGrades r.PsetNum r.PsetStudent}>Grade Pset {[r.PsetNum]} for {[r.PsetStudent]}</a></xml>
-                                         end)
-
-    structure LectureUploadTodo = Todo.WithDueDate(struct
-                                                       con tag = #Lecture
-                                                       con due = #When
-                                                       con key = [LectureNum = _]
-                                                       val items = lecture
-                                                       val done = LectureSub.submission
-                                                       con ukey = #UserName
-                                                       val users = user
-                                                       val title = "Lecture"
-                                                       val ucond = (WHERE Users.IsInstructor)
-                                                       val allowAnyUser = True
-
-                                                       fun render r _ = <xml>{[r]}</xml>
-                                                   end)
-
-    structure LabUploadTodo = Todo.WithDueDate(struct
-                                                   con tag = #Lab
-                                                   con due = #When
-                                                   con key = [LabNum = _]
-                                                   val items = lab
-                                                   val done = LabSub.submission
-                                                   con ukey = #UserName
-                                                   val users = user
-                                                   val title = "Lab"
-                                                   val ucond = (WHERE Users.IsInstructor)
-                                                   val allowAnyUser = True
-
-                                                   fun render r _ = <xml>{[r]}</xml>
-                                               end)
-
-    structure PsetUploadTodo = Todo.WithDueDate(struct
-                                                    con tag = #Pset
-                                                    con due = #Released
-                                                    con key = [PsetNum = _]
-                                                    val items = pset
-                                                    val done = PsetSpec.submission
-                                                    con ukey = #UserName
-                                                    val users = user
-                                                    val title = "Pset"
-                                                    val ucond = (WHERE Users.IsInstructor)
-                                                    val allowAnyUser = True
-
-                                                    fun render r _ = <xml>{[r]}</xml>
-                                                end)
-
-    structure ContentTodo = Todo.Make(struct
-                                          val t = LectureUploadTodo.todo
-                                                      |> Todo.compose LabUploadTodo.todo
-                                                      |> Todo.compose PsetUploadTodo.todo
-                                    end)
-
-    structure StaffTodo = Todo.Make(struct
-                                        val t = LectureTodo.todo
-                                                    |> Todo.compose LabTodo.todo
-                                                    |> Todo.compose GradingTodo.todo
-                                    end)
-
-    structure Grades = MitGrades.Make(struct
-                                          con groups = [IsInstructor, IsTA, HasDropped]
-                                          con others = [Kerberos = _, Password = _]
-                                          constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
-                                          val users = user
-                                          val grades = gradeTree
-                                          val access =
-                                              staff <- amStaff;
-                                              return (if staff then
-                                                          FinalGrades.Write
-                                                      else
-                                                          FinalGrades.Forbidden)
-                                      end)
-
-    structure TimeSpent = SimpleQuery.Make(struct
-                                               val submission = PsetSub.submission
-
-                                               val query = (SELECT AVG(submission.Hours) AS Avg, MAX(submission.Hours) AS Max, MIN(submission.Hours) AS Min, COUNT( * ) AS Count, submission.PsetNum AS PsetNum
-                                                            FROM (SELECT submission.PsetNum AS PsetNum, MAX(submission.Hours) AS Hours
-                                                                  FROM submission
-                                                                  WHERE submission.Hours > 0
-                                                                  GROUP BY submission.PsetNum, submission.UserName) AS Submission
-                                                              JOIN pset ON submission.PsetNum = pset.PsetNum
-                                                            WHERE pset.Due < CURRENT_TIMESTAMP
-                                                            GROUP BY submission.PsetNum
-                                                            ORDER BY submission.PsetNum)
-
-                                               val labels = {Avg = "Average",
-                                                             Max = "Maximum",
-                                                             Min = "Minimum",
-                                                             Count = "Count",
-                                                             PsetNum = "Pset#"}
-                                           end)
-
-    structure Suggestions = SimpleQuery1.Make(struct
-                                                  val submission = PsetSub.submission
-                                                                   
-                                                  val query = (SELECT submission.Suggestions, submission.PsetNum
-                                                               FROM submission
-                                                                 JOIN pset ON submission.PsetNum = pset.PsetNum
-                                                               WHERE pset.Due < CURRENT_TIMESTAMP
-                                                                 AND submission.Suggestions <> ''
-                                                               ORDER BY submission.PsetNum, submission.Suggestions)
-
-                                                  val labels = {Suggestions = "Suggestions",
-                                                                PsetNum = "Pset#"}
-                                              end)
-
-    fun staff masqAs =
-        (case masqAs of
-             "" => Auth.unmasquerade
-           | _ => Auth.masqueradeAs masqAs);
-
-        u <- getStaff;
-        key <- return {UserName = u};
-        st <- Sm.current;
-
-        lec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle, lecture.When, lecture.Description
-                             FROM lecture
-                             WHERE lecture.When < CURRENT_TIMESTAMP
-                             ORDER BY lecture.When DESC
-                             LIMIT 1);
-
-        lecr <- return (Option.get {LectureNum = 0,
-                                    LectureTitle = "",
-                                    When = minTime,
-                                    Description = ""} lec);
-
-        nlec <- oneOrNoRows1 (SELECT lecture.LectureNum, lecture.LectureTitle, lecture.When, lecture.Description
-                              FROM lecture
-                              WHERE lecture.When > CURRENT_TIMESTAMP
-                              ORDER BY lecture.When
-                              LIMIT 1);
-
-        nlecr <- return (Option.get {LectureNum = 0,
-                                     LectureTitle = "",
-                                     When = minTime,
-                                     Description = ""} nlec);
-
-        lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
-                            FROM lab
-                            WHERE lab.When < CURRENT_TIMESTAMP
-                            ORDER BY lab.When DESC
-                            LIMIT 1);
-
-        lbr <- return (Option.get {LabNum = 0,
-                                   When = minTime,
-                                   Description = ""} lb);
-
-        nlb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
-                             FROM lab
-                             WHERE lab.When > CURRENT_TIMESTAMP
-                             ORDER BY lab.When
-                             LIMIT 1);
-
-        nlbr <- return (Option.get {LabNum = 0,
-                                    When = minTime,
-                                    Description = ""} nlb);
-
-        ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
-                            FROM pset
-                            WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
-                            ORDER BY pset.Due DESC
-                            LIMIT 1);
-
-        psr <- return (Option.get {PsetNum = 0,
-                                   Released = minTime,
-                                   Due = minTime,
-                                   Instructions = ""} ps);
-
-        lps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
-                             FROM pset
-                             WHERE pset.Due <= CURRENT_TIMESTAMP
-                             ORDER BY pset.Due DESC
-                             LIMIT 1);
-
-        lpsr <- return (Option.get {PsetNum = 0,
-                                    Released = minTime,
-                                    Due = minTime,
-                                    Instructions = ""} lps);
-
-        nps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
-                             FROM pset
-                             WHERE pset.Released > CURRENT_TIMESTAMP
-                             ORDER BY pset.Due
-                             LIMIT 1);
-
-        npsr <- return (Option.get {PsetNum = 0,
-                                    Released = minTime,
-                                    Due = minTime,
-                                    Instructions = ""} nps);
-
-        Theme.tabbed "MIT 6.887, Spring 2016 Staff"
-                     ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
-                       OhPoll.ui {Ballot = (), Voter = key}),
-                      (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
-                       Grades.ui),
-                      (Some "Todo",
-                       Ui.seq (ContentTodo.OneUser.ui u,
-                               StaffTodo.OneUser.ui u)),
-                      (Some "Calendar",
-                       AdminCal.ui calBounds),
-                      (Some "News",
-                       Ann.ui),
-
-                      (case nlec of
-                           None => None
-                         | Some _ => Some "Next Lecture",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Lecture {[nlecr.LectureNum]}: {[nlecr.LectureTitle]}</h2>
-                         <h3>{[nlecr.When]}</h3>
-                         {Widget.html nlecr.Description}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                                         (LectureSub.newUpload {LectureNum = nlecr.LectureNum})}
-
-                         <hr/>
-                       </xml>),
-                               LectureSub.AllFilesAllUsers.ui {LectureNum = nlecr.LectureNum})),
-
-                      (case nlb of
-                           None => None
-                         | Some _ => Some "Next Lab",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Lab {[nlbr.LabNum]}</h2>
-                         <h3>{[nlbr.When]}</h3>
-                         {Widget.html nlbr.Description}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                                         (LabSub.newUpload {LabNum = nlbr.LabNum})}
-
-                         <hr/>
-                       </xml>),
-                               LabSub.AllFilesAllUsers.ui {LabNum = nlbr.LabNum})),
-
-                      (case nps of
-                           None => None
-                         | Some _ => Some "Next Pset",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Pset {[npsr.PsetNum]}</h2>
-                         <h3>Released: {[npsr.Released]}<br/>
-                         Due: {[npsr.Due]}</h3>
-                         {Widget.html npsr.Instructions}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
-                                         (PsetSpec.newUpload {PsetNum = npsr.PsetNum})}
-
-                         <hr/>
-                       </xml>),
-                               PsetSpec.AllFilesAllUsers.ui {PsetNum = npsr.PsetNum})),
-
-                      (case ps of   
-                           None => None
-                         | Some _ => Some "Current Pset",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Pset {[psr.PsetNum]}</h2>
-                         <h3>Released: {[psr.Released]}<br/>
-                         Due: {[psr.Due]}</h3>
-                         {Widget.html psr.Instructions}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
-                                         (PsetSpec.newUpload {PsetNum = psr.PsetNum})}
-
-                         <hr/>
-
-                         <h2>Forum</h2>
-                       </xml>),
-                       PsetForum.ui {PsetNum = psr.PsetNum})),
-
-                      (case lps of
-                           None => None
-                         | Some _ => Some "Last Pset",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Pset {[lpsr.PsetNum]}</h2>
-                         <h3>Released: {[lpsr.Released]}<br/>
-                         Due: {[lpsr.Due]}</h3>
-                         {Widget.html lpsr.Instructions}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
-                                         (PsetSpec.newUpload {PsetNum = lpsr.PsetNum})}
-
-                         <hr/>
-                       </xml>),
-                               PsetSpec.AllFilesAllUsers.ui {PsetNum = lpsr.PsetNum})),
-
-                      (case lec of
-                           None => None
-                         | Some _ => Some "Last Lecture",
-                       Ui.seq (Ui.const <xml>
-                         <h2>Lecture {[lecr.LectureNum]}: {[lecr.LectureTitle]}</h2>
-                         <h3>{[lecr.When]}</h3>
-                         {Widget.html lecr.Description}
-
-                         <hr/>
-
-                         <h2>Forum</h2>
-                       </xml>,
-                               LectureForum.ui {LectureNum = lecr.LectureNum})),
-
-                      (case lb of
-                           None => None
-                         | Some _ => Some "Last Lab",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Lab {[lbr.LabNum]}</h2>
-                         <h3>{[lbr.When]}</h3>
-                         {Widget.html lbr.Description}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                                         (LabSub.newUpload {LabNum = lbr.LabNum})}
-
-                         <hr/>
-                       </xml>),
-                               LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
-                       Ui.const <xml>
-                         <hr/>
-
-                         <h2>Forum</h2>
-                       </xml>,
-                               LabForum.ui {LabNum = lbr.LabNum})),
-
-                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
-                       GlobalForum.ui),
-                      (Some "Students",
-                       Students.ui),
-                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Time Stats",
-                       TimeSpent.ui),
-                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Suggestions",
-                       Suggestions.ui),
-                      (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
-                       AllGrades.ui),
-                      (Ui.when (st = make [#SteadyState] ()) "Poll on Favorite Office-Hours Times",
-                       OhPoll.ui {Ballot = (), Voter = key}))
-
-    val admin =
-        requireInstructor;
-        tm <- now;
-        st <- Sm.current;
-
-        masq <- queryX1 (SELECT user.UserName
-                         FROM user
-                         WHERE user.IsStudent
-                         ORDER BY user.UserName)
-                        (fn r => <xml>
-                          <tr><td><a link={student r.UserName}>{[r.UserName]}</a></td></tr>
-                        </xml>);
-
-        smasq <- queryX1 (SELECT user.UserName
-                          FROM user
-                          WHERE user.IsTA
-                          ORDER BY user.UserName)
-                         (fn r => <xml>
-                           <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
-                         </xml>);
-
-        Theme.tabbed "MIT 6.887, Spring 2016 Admin"
-                     ((Some "Lifecycle",
-                       Smu.ui),
-                      (Some "Calendar",
-                       AdminCal.ui calBounds),
-                      (Some "Import",
-                       WS.ui),
-                      (Some "Users",
-                       EditUser.ui),
-                      (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
-                       Ui.seq (Ui.h4 <xml>Enter times like "{[tm]}".  Only the time part will be shown to students.</xml>,
-                               EditPossOh.ui)),
-                      (Some "Student Masquerade",
-                       Ui.const <xml>
-                         <table class="bs3-table table-striped">
-                           {masq}
-                         </table>
-                       </xml>),
-                      (Some "TA Masquerade",
-                       Ui.const <xml>
-                         <table class="bs3-table table-striped">
-                           {smasq}
-                         </table>
-                       </xml>))
-
 end
 
-val main =
-    st <- Sm.current;
-
-    Theme.tabbed "MIT 6.887, Spring 2016"
-                 ((Some "Course Info",
-                   Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
-                                         <xml></xml>
-                                     else
-                                         <xml><p>
-                                           <a class="btn btn-primary btn-lg" link={Private.student ""}>Go to student portal</a>
-                                           (requires an <a href="https://ist.mit.edu/certificates">MIT client certificate</a>)
-                                         </p></xml>),
-                           courseInfo)),
-                  (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-                   calUi))
-
-val login =
-    Theme.simple "MIT 6.887, non-MIT user login" Auth.Login.ui
-
 val index = return <xml><body>
-  <a link={main}>Main</a>
-  <a link={Private.admin}>Admin</a>
-  <a link={Private.staff ""}>Staff</a>
-  <a link={Private.student ""}>Student</a>
-  <a link={Private.psetGrades 0 ""}>Grade</a>
-  <a link={login}>Login</a>
+  <a link={Private.student}>Student</a>
 </body></xml>
