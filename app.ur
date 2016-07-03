@@ -28,14 +28,49 @@ table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Ins
 table officeHours : { OhUser : string, When : time }
   PRIMARY KEY When
 
+val whoami = return (Some "adamc")
 val whoami' = return (Some {UserName = "adamc"})
 
-val amInstructor = return True
-val instructorOnly = return Calendar.Write
+val amInstructor =
+    me <- whoami;
+    case me of
+        None => return False
+      | Some me =>
+        oneRowE1 (SELECT (user.IsInstructor)
+                  FROM user
+                  WHERE user.Kerberos = {[me]})
+val instructorOnly =
+    b <- amInstructor;
+    return (if b then
+                Calendar.Write
+            else
+                Calendar.Read)
 
-val whoamiStudent = return "adamc"
+val whoamiStudent =
+    me <- whoami;
+    case me of
+        None => error <xml>Not logged in</xml>
+      | Some me =>
+        b <- oneRowE1 (SELECT (user.IsInstructor OR user.IsTA OR user.IsStudent)
+                  FROM user
+                  WHERE user.Kerberos = {[me]});
+        if b then
+            return me
+        else
+            error <xml>Not a student</xml>
 
-val whoamiStaff = return "adamc"
+val whoamiStaff =
+    me <- whoami;
+    case me of
+        None => error <xml>Not logged in</xml>
+      | Some me =>
+        b <- oneRowE1 (SELECT (user.IsInstructor OR user.IsTA)
+                  FROM user
+                  WHERE user.Kerberos = {[me]});
+        if b then
+            return me
+        else
+            error <xml>Not staff</xml>
 
 val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
 
@@ -434,50 +469,7 @@ fun emailOf kerb =
 fun toOf {UserName = name, Kerberos = kerb} =
     name ^ " <" ^ emailOf kerb ^ ">"
 
-fun onNewMessage kind getUsers r =
-    us <- getUsers;
-    us <- query (SELECT user.UserName
-                 FROM user
-                 WHERE user.IsInstructor OR user.IsTA)
-          (fn {User = {UserName = u}} us =>
-              return (if List.mem u us then
-                          us
-                      else
-                          u :: us)) us;
-
-    u <- return (Some "adamc");
-    let
-        val us = case u of
-                     None => error <xml>Posting message while not logged in</xml>
-                   | Some u => List.filter (fn u' => u' <> u) us
-
-        val hs = Mail.empty
-                     |> Mail.from mailFrom
-                     |> Mail.to mailFrom
-                     |> Mail.subject "New forum message"
-    in
-        hs <- query (SELECT user.UserName, user.Kerberos
-                     FROM user
-                     WHERE {List.foldl (fn name p =>
-                         (WHERE user.UserName = {[name]} OR {p})) (WHERE FALSE) us})
-              (fn {User = {UserName = name, Kerberos = kerb}} hs =>
-                  return (Mail.bcc (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
-        let
-            val textm = "Let it be known that there is a new MIT 6.887 "
-                        ^ kind
-                        ^ " forum message posted by "
-                        ^ r.Who
-                        ^ " in the thread \""
-                        ^ r.Subject
-                        ^ ".\"\n"
-
-            val htmlm = <xml>
-              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.887</a> {[kind]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
-            </xml>
-        in
-            Mail.send hs textm (Some htmlm)
-        end
-    end
+fun onNewMessage kind getUsers r = return ()
 
 structure GlobalForum = GlobalDiscussion.Make(struct
                                                   val text = Widget.htmlbox
@@ -556,33 +548,7 @@ structure Ann = News.Make(struct
 
                               val access = return (News.Admin {User = "adamc"})
 
-                              fun onNewPost r =
-                                  let
-                                      val hs = Mail.empty
-                                                   |> Mail.from mailFrom
-                                                   |> Mail.to mailFrom
-                                                   |> Mail.subject ("Announcement: " ^ r.Title)
-                                  in
-                                      hs <- query (SELECT user.UserName, user.Kerberos
-                                                   FROM user
-                                                   WHERE user.IsInstructor
-                                                     OR user.IsTA
-                                                     OR user.IsStudent
-                                                     OR user.IsListener)
-                                                  (fn {User = r} hs =>
-                                                      return (Mail.bcc (toOf r) hs)) hs;
-                                      let
-                                          val textm = Html.unhtml r.Body
-
-                                          val htmlm = <xml>
-                                            {Widget.html r.Body}
-
-                                            <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.887 site</a></p>
-                                          </xml>
-                                      in
-                                          Mail.send hs textm (Some htmlm)
-                                      end
-                                  end
+                              fun onNewPost r = return ()
                           end)
 
 structure Private = struct
