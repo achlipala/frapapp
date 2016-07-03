@@ -1,7 +1,7 @@
 library style
-rewrite relation App/*
-rewrite url App/*
-rewrite style App/*
+rewrite relation App_easier/*
+rewrite url App_easier/*
+rewrite style App_easier/*
 safeGet main
 safeGet Private/admin
 safeGet Private/staff
@@ -11,7 +11,7 @@ safeGet Private/oldPset
 safeGet Private/oldLab
 safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
-alwaysInline App/Sm/next
+alwaysInline App_easier/Sm/next
 alwaysInline Auth/variantToExp
 alwaysInline Auth/inGroup
 file /style.css style.css
@@ -20,4 +20,4 @@ allow mime text/x-verilog
 allow url http://*
 allow url https://*
 
-app
+app_easier

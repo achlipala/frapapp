@@ -1,0 +1,4 @@
+library easier
+prefix https://localhost/
+database dbname=frap
+sql testing.sql
