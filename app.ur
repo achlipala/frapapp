@@ -1,6 +1,6 @@
 open Bootstrap3
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2016
+structure ThisTerm = Spring2017
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 val mailFrom = "MIT 6.887 <frap@csail.mit.edu>"
@@ -16,10 +16,6 @@ table possibleOfficeHoursTime : { Time : time }
 
 table lecture : { LectureNum : int, LectureTitle : string, When : time, Description : string }
   PRIMARY KEY LectureNum,
-  CONSTRAINT When UNIQUE When
-
-table lab : { LabNum : int, When : time, Description : string }
-  PRIMARY KEY LabNum,
   CONSTRAINT When UNIQUE When
 
 table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Instructions : string }
@@ -172,17 +168,6 @@ structure LectureSub = Submission.Make(struct
 
 val showLabNum = mkShow (fn {LabNum = n : int} => "Lab " ^ show n)
 
-structure LabSub = Submission.Make(struct
-                                       val tab = lab
-                                       con ukey = #UserName
-                                       val user = user
-                                       val whoami = u <- whoamiStaff; return (Some u)
-                                       val labels = {}
-
-                                       fun makeFilename k _ = "Lab" ^ show k.LabNum ^ ".v"
-                                       fun mayInspect _ = return True
-                                   end)
-
 structure PsetSpec = Submission.Make(struct
                                        val tab = pset
                                        con ukey = #UserName
@@ -200,18 +185,18 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2016</p>
+          <p>A graduate course at MIT in Spring 2017</p>
         </div>
       </div>
 
       <table class="bs3-table table-striped">
         <tr> <th>Subject number:</th> <td>6.887</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistant:</th> <td><a href="http://people.csail.mit.edu/wangpeng/">Peng Wang</a></td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="http://people.csail.mit.edu/joonwonc/">Joonwon Choi</a></td> </tr>
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 34-304</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/wangpengmit/6887psets">GitHub repo with problem sets and lab code</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/psets">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
@@ -228,15 +213,16 @@ val courseInfo =
       <table class="bs3-table table-striped">
         <tr><th>Foundations</th></tr>
         <tr><td>Inductive types, recursive functions, induction, and rewriting: the heart of formal reasoning, and useful for defining and reasoning about language interpreters</td></tr>
+        <tr><td>Data abstraction in the presence of formal proofs</td></tr>
         <tr><td>Inductively defined relations and rule induction, applied to invariant-based verification of state machines</td></tr>
         <tr><td>Model checking and abstraction: finitizing state spaces with clever relations</td></tr>
         <tr><td>Operational semantics: the standard approach to give meanings to programs</td></tr>
-        <tr><td>Abstract interpretation and dataflow analysis: computing families of program invariants automatically</td></tr>
+        <tr><td>Compiler verification</td></tr>
 
         <tr><th>Type Systems</th></tr>
         <tr><td>Lambda-calculus semantics</td></tr>
         <tr><td>Type systems and the syntactic approach to type soundness</td></tr>
-        <tr><td>Advanced type-system features: recursive types, polymorphism, subtyping, mutable references</td></tr>
+        <tr><td>Advanced type-system features: subtyping, mutable references</td></tr>
 
         <tr><th>Program Logics</th></tr>
         <tr><td>Hoare logic: an approach to verifying imperative programs</td></tr>
@@ -260,11 +246,13 @@ val courseInfo =
         <tr><th>Modularity</th> <td>We also often break a complex state machine into several simpler ones that can be analyzed independently.</td></tr>
       </table>
 
-      <h2>All homework assignments are mechanized proofs that are checked automatically.</h2>
+      <h2>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</h2>
 
-      <p>As a result, you may or may not want to conclude that the robot uprising is coming sooner than you thought.</p>
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  In roughly the last month of class, the Coq-feature lectures will be replaced by presentations on full-scale research projects at MIT that use Coq to establish correctness of fairly realistic software or hardware systems.  (The details are open to influence by the interests of the students, but the instructor's current guess is lectures on <a href="http://css.csail.mit.edu/fscq/">FSCQ</a>, <a href="http://plv.csail.mit.edu/fiat/">Fiat</a>, <a href="https://github.com/mit-plv/fiat-crypto">Fiat Cryptography</a>, and <a href="http://plv.csail.mit.edu/kami/">Kami</a>.</p>
 
-      <p>Usually, the Monday class is a more or less traditional <i>lecture</i>, and the Wednesday class is a <i>lab</i>, where students can work together proving suggested theorems on their laptops.  Grades are based entirely on <i>problem sets</i> (graded by the machines), and a new one is released right after each lab, due a week later.</p>
+      <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later.</p>
+
+      <p>It takes a while to internalize all the pro trips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i>, in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
       <p><b>Academic integrity guidelines:</b> Learning to drive a proof assistant is hard work, and it's valuable to be able to ask for help from your classmates.  For that reason, we allow asking for help from classmates, not just the course staff, with no particular acknowledgment in turned-in solutions.  However, the requirement is that <i>you have entered your problem-set code/proofs yourself, without someone else looking over your shoulder telling you more or less what to type at every stage</i>.  Use your judgment about exactly which interaction styles will stay compatible with this rule.  You'll generally learn more as you spend time working through the parts of assignments where you don't wind up stuck on something, and it's generally valuable to seek help (from classmates or course staff) when you're stuck.</p>
 
@@ -274,15 +262,13 @@ val courseInfo =
 
       <h2>Suggested reading</h2>
 
-      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a> that the instructor is developing as we go.</p>
+      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from last year's offering of this subject, but which will have some moderate changes made as we go.</p>
 
-      <p>The course is intended to be self-contained, and notes and example Coq code will be distributed with all lectures.  We'll also be using a custom Coq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
+      <p>The course is intended to be self-contained, and notes and example Coq code will be in <a href="https://github.com/achlipala/frap">the book's GitHub repo</a>.  We'll also be using a custom Coq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
 
       <h3>The Coq proof assistant</h3>
 
       <ul>
-        <!--li><a href="https://coq.inria.fr/distrib/current/refman/">Coq reference manual</a></li>
-        <li><a href="https://coq.inria.fr/distrib/current/stdlib/">Coq standard-library reference</a></li-->
         <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
         <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
         <li><a href="http://www.cis.upenn.edu/~bcpierce/sf/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
@@ -359,43 +345,6 @@ structure LectureCal = Calendar.FromTable(struct
                                               val showTime = True
                                           end)
 
-fun getLab num =
-    oneRow1 (SELECT lab.Description, lab.When
-             FROM lab
-             WHERE lab.LabNum = {[num]})
-
-val showLab = mkShow (fn {LabNum = n : int} => "Lab " ^ show n)
-
-structure LabCal = Calendar.FromTable(struct
-                                          con tag = #Lab
-                                          con key = [LabNum = _]
-                                          con times = [When]
-                                          val tab = lab
-                                          val title = "Lab"
-                                          val labels = {LabNum = "Lab#",
-                                                        Description = "Description",
-                                                        When = "When"}
-                                          val kinds = {When = ""}
-                                          val ws = {Description = Widget.htmlbox} ++ _
-                                          val display = Some (fn ctx r =>
-                                                                 content <- source <xml/>;
-                                                                 lb <- rpc (getLab r.LabNum);
-                                                                 set content (Ui.simpleModal
-                                                                                  <xml>
-                                                                                    <h2>Lab #{[r.LabNum]}</h2>
-                                                                                    <h3>{[lb.When]}</h3>
-                                                                                    
-                                                                                    {Widget.html lb.Description}
-                                                                                  </xml>
-                                                                                  <xml>Close</xml>);
-                                                                 return <xml>
-                                                                   <dyn signal={signal content}/>
-                                                                 </xml>)
-
-                                          val auth = instructorOnly
-                                          val showTime = True
-                                      end)
-
 fun getPset num =
     oneRow1 (SELECT pset.Instructions, pset.Released, pset.Due
              FROM pset
@@ -470,14 +419,11 @@ structure PublicCal = Calendar.Make(struct
                                         val t = ThisTerm.cal
                                                     |> Calendar.compose OhCal.cal
                                                     |> Calendar.compose PsetCal.cal
-                                                    |> Calendar.compose LabCal.cal
                                                     |> Calendar.compose LectureCal.cal
                                     end)
 
 val calUi = Ui.seq (Ui.h4 <xml>
-  Lecture and lab are in 34-304.<br/>
-  Peng's office hours are in 34-301.<br/>
-  Adam's office hours are in 32-G842.
+  Lecture and lab are in 34-304.
 </xml>, PublicCal.ui calBounds)
 
 val forumAccess = staff <- amStaff;
@@ -566,19 +512,6 @@ structure LectureForum = TableDiscussion.Make(struct
                                                   val onNewMessage = onNewMessage "lecture"
                                               end)
 
-structure LabForum = TableDiscussion.Make(struct
-                                              con key1 = #LabNum
-                                              con keyR = []
-                                              con thread = #Thread
-                                              val parent = lab
-
-                                              val text = Widget.htmlbox
-                                              fun access _ = forumAccess
-                                              val showOpenVsClosed = True
-                                              val allowPrivate = True
-                                              val onNewMessage = onNewMessage "lab"
-                                          end)
-
 structure PsetForum = TableDiscussion.Make(struct
                                                con key1 = #PsetNum
                                                con keyR = []
@@ -603,18 +536,6 @@ structure LectureTodo = Todo.Happenings(struct
                                             val title = "Lecture"
                                             fun render r = <xml>{[r]}</xml>
                                         end)
-
-structure LabTodo = Todo.Happenings(struct
-                                        con tag = #Lab
-                                        con key = [LabNum = _]
-                                        con when = #When
-                                        val items = lab
-                                        con ukey = #UserName
-                                        val users = user
-                                        val ucond = (WHERE Users.IsStudent OR Users.IsInstructor OR Users.IsTA)
-                                        val title = "Lab"
-                                        fun render r = <xml>{[r]}</xml>
-                                    end)
 
 structure Ann = News.Make(struct
                               val title = Widget.textbox
@@ -728,7 +649,6 @@ structure Private = struct
 
     structure StudentTodo = Todo.Make(struct
                                           val t = LectureTodo.todo
-                                                      |> Todo.compose LabTodo.todo
                                                       |> Todo.compose PsetTodoStudent.todo
                                       end)
 
@@ -763,26 +683,6 @@ structure Private = struct
           </xml>,
           PsetForum.ui {PsetNum = id}))
 
-    fun oldLab id =
-        u <- whoamiStudent;
-        lb <- oneRow1 (SELECT lab.When, lab.Description
-                       FROM lab
-                       WHERE lab.LabNum = {[id]});
-        Theme.simple ("MIT 6.887: Lab " ^ show id) (Ui.seq
-          (Ui.const <xml>
-            <h2>Lab {[id]}</h2>
-            <h3>{[lb.When]}</h3>
-            {Widget.html lb.Description}
-
-            <hr/>
-          </xml>,
-          LabSub.AllFilesAllUsers.ui {LabNum = id},
-          Ui.const <xml>
-            <hr/>
-            <h2>Forum</h2>
-          </xml>,
-          LabForum.ui {LabNum = id}))
-
     fun student masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -803,16 +703,6 @@ structure Private = struct
                                     When = minTime,
                                     Description = ""} lec);
 
-        lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
-                            FROM lab
-                            WHERE lab.When < CURRENT_TIMESTAMP
-                            ORDER BY lab.When DESC
-                            LIMIT 1);
-
-        lbr <- return (Option.get {LabNum = 0,
-                                   When = minTime,
-                                   Description = ""} lb);
-
         ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
                             FROM pset
                             WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
@@ -830,13 +720,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        oldLabs <- queryX1 (SELECT lab.LabNum
-                            FROM lab
-                            WHERE lab.When < CURRENT_TIMESTAMP
-                            ORDER BY lab.When)
-                           (fn r => <xml><tr><td><a link={oldLab r.LabNum}>{[r]}</a></td></tr></xml>);
-
-        Theme.tabbed "MIT 6.887, Spring 2016, student page"
+        Theme.tabbed "MIT 6.887, Spring 2017, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
@@ -892,30 +776,8 @@ structure Private = struct
           </xml>,
                   LectureForum.ui {LectureNum = lecr.LectureNum})),
 
-         (case lb of
-              None => None
-            | Some _ => Some "Last Lab",
-          Ui.seq (Ui.constM (fn ctx => <xml>
-            <h2>Lab {[lbr.LabNum]}</h2>
-            <h3>{[lbr.When]}</h3>
-            {Widget.html lbr.Description}
-            
-            {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                            (LabSub.newUpload {LabNum = lbr.LabNum})}
-
-            <hr/>
-          </xml>),
-          LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
-          Ui.const <xml>
-            <hr/>
-            <h2>Forum</h2>
-          </xml>,
-                  LabForum.ui {LabNum = lbr.LabNum})),
-
          (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Files",
           PsetSpec.AllFilesAllKeys.ui),
-         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Lab Files",
-          LabSub.AllFilesAllKeys.ui),
 
          (Some "Global Forum",
           GlobalForum.ui),
@@ -931,12 +793,6 @@ structure Private = struct
           Ui.const <xml>
             <table class="bs3-table table-striped">
               {oldPsets}
-            </table>
-          </xml>),
-         (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Labs",
-          Ui.const <xml>
-            <table class="bs3-table table-striped">
-              {oldLabs}
             </table>
           </xml>),
          (Some "Course Info",
@@ -979,7 +835,6 @@ structure Private = struct
                                            val t = ThisTerm.cal
                                                        |> Calendar.compose OhCal.cal
                                                        |> Calendar.compose PsetCal.cal
-                                                       |> Calendar.compose LabCal.cal
                                                        |> Calendar.compose LectureCal.cal
                                        end)
 
@@ -1044,21 +899,6 @@ structure Private = struct
                                                        fun render r _ = <xml>{[r]}</xml>
                                                    end)
 
-    structure LabUploadTodo = Todo.WithDueDate(struct
-                                                   con tag = #Lab
-                                                   con due = #When
-                                                   con key = [LabNum = _]
-                                                   val items = lab
-                                                   val done = LabSub.submission
-                                                   con ukey = #UserName
-                                                   val users = user
-                                                   val title = "Lab"
-                                                   val ucond = (WHERE Users.IsInstructor)
-                                                   val allowAnyUser = True
-
-                                                   fun render r _ = <xml>{[r]}</xml>
-                                               end)
-
     structure PsetUploadTodo = Todo.WithDueDate(struct
                                                     con tag = #Pset
                                                     con due = #Released
@@ -1076,13 +916,11 @@ structure Private = struct
 
     structure ContentTodo = Todo.Make(struct
                                           val t = LectureUploadTodo.todo
-                                                      |> Todo.compose LabUploadTodo.todo
                                                       |> Todo.compose PsetUploadTodo.todo
                                     end)
 
     structure StaffTodo = Todo.Make(struct
                                         val t = LectureTodo.todo
-                                                    |> Todo.compose LabTodo.todo
                                                     |> Todo.compose GradingTodo.todo
                                     end)
 
@@ -1165,26 +1003,6 @@ structure Private = struct
                                      When = minTime,
                                      Description = ""} nlec);
 
-        lb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
-                            FROM lab
-                            WHERE lab.When < CURRENT_TIMESTAMP
-                            ORDER BY lab.When DESC
-                            LIMIT 1);
-
-        lbr <- return (Option.get {LabNum = 0,
-                                   When = minTime,
-                                   Description = ""} lb);
-
-        nlb <- oneOrNoRows1 (SELECT lab.LabNum, lab.When, lab.Description
-                             FROM lab
-                             WHERE lab.When > CURRENT_TIMESTAMP
-                             ORDER BY lab.When
-                             LIMIT 1);
-
-        nlbr <- return (Option.get {LabNum = 0,
-                                    When = minTime,
-                                    Description = ""} nlb);
-
         ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
                             FROM pset
                             WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
@@ -1218,7 +1036,7 @@ structure Private = struct
                                     Due = minTime,
                                     Instructions = ""} nps);
 
-        Theme.tabbed "MIT 6.887, Spring 2016 Staff"
+        Theme.tabbed "MIT 6.887, Spring 2017 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1245,21 +1063,6 @@ structure Private = struct
                          <hr/>
                        </xml>),
                                LectureSub.AllFilesAllUsers.ui {LectureNum = nlecr.LectureNum})),
-
-                      (case nlb of
-                           None => None
-                         | Some _ => Some "Next Lab",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Lab {[nlbr.LabNum]}</h2>
-                         <h3>{[nlbr.When]}</h3>
-                         {Widget.html nlbr.Description}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                                         (LabSub.newUpload {LabNum = nlbr.LabNum})}
-
-                         <hr/>
-                       </xml>),
-                               LabSub.AllFilesAllUsers.ui {LabNum = nlbr.LabNum})),
 
                       (case nps of
                            None => None
@@ -1325,27 +1128,6 @@ structure Private = struct
                        </xml>,
                                LectureForum.ui {LectureNum = lecr.LectureNum})),
 
-                      (case lb of
-                           None => None
-                         | Some _ => Some "Last Lab",
-                       Ui.seq (Ui.constM (fn ctx => <xml>
-                         <h2>Lab {[lbr.LabNum]}</h2>
-                         <h3>{[lbr.When]}</h3>
-                         {Widget.html lbr.Description}
-
-                         {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload Code</xml>
-                                         (LabSub.newUpload {LabNum = lbr.LabNum})}
-
-                         <hr/>
-                       </xml>),
-                               LabSub.AllFilesAllUsers.ui {LabNum = lbr.LabNum},
-                       Ui.const <xml>
-                         <hr/>
-
-                         <h2>Forum</h2>
-                       </xml>,
-                               LabForum.ui {LabNum = lbr.LabNum})),
-
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
                        GlobalForum.ui),
                       (Some "Students",
@@ -1380,7 +1162,7 @@ structure Private = struct
                            <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
                          </xml>);
 
-        Theme.tabbed "MIT 6.887, Spring 2016 Admin"
+        Theme.tabbed "MIT 6.887, Spring 2017 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1410,7 +1192,7 @@ end
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.887, Spring 2016"
+    Theme.tabbed "MIT 6.887, Spring 2017"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
