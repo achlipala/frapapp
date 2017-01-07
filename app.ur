@@ -204,7 +204,7 @@ val courseInfo =
 
       <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 8th.</p>
 
       <h2>Major topics covered</h2>
 
@@ -246,9 +246,11 @@ val courseInfo =
         <tr><th>Modularity</th> <td>We also often break a complex state machine into several simpler ones that can be analyzed independently.</td></tr>
       </table>
 
-      <h2>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</h2>
+      <h2>Mechanics</h2>
 
-      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  In roughly the last month of class, the Coq-feature lectures will be replaced by presentations on full-scale research projects at MIT that use Coq to establish correctness of fairly realistic software or hardware systems.  (The details are open to influence by the interests of the students, but the instructor's current guess is lectures on <a href="http://css.csail.mit.edu/fscq/">FSCQ</a>, <a href="http://plv.csail.mit.edu/fiat/">Fiat</a>, <a href="https://github.com/mit-plv/fiat-crypto">Fiat Cryptography</a>, and <a href="http://plv.csail.mit.edu/kami/">Kami</a>.</p>
+      <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
+
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  In roughly the last month of class, the Coq-feature lectures will be replaced by presentations on full-scale research projects at MIT that use Coq to establish correctness of fairly realistic software or hardware systems.  (The details are open to influence by the interests of the students, but the instructor's current guess is lectures on <a href="http://css.csail.mit.edu/fscq/">FSCQ</a>, <a href="http://plv.csail.mit.edu/fiat/">Fiat</a>, <a href="https://github.com/mit-plv/fiat-crypto">Fiat Cryptography</a>, and <a href="http://plv.csail.mit.edu/kami/">Kami</a>.)</p>
 
       <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later.</p>
 
