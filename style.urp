@@ -5,5 +5,6 @@ script https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js
 script https://cdn.ckeditor.com/4.5.5/standard/ckeditor.js
 file /style.css style.css
 allow url https://www.eecs.mit.edu/sites/all/themes/adaptivetheme/miteecs_adaptive_production/favicon.ico
+library $/upo/navbar
 
 style

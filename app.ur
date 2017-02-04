@@ -21,6 +21,10 @@ table lecture : { LectureNum : int, LectureTitle : string, When : time, Descript
 table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Instructions : string }
   PRIMARY KEY PsetNum
 
+table hint : { PsetNum : int, Title : string, Text : string, ReleaseAt : time }
+  PRIMARY KEY (PsetNum, Title),
+  CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE
+
 table officeHours : { OhUser : string, When : time }
   PRIMARY KEY When
 
@@ -609,6 +613,24 @@ structure Private = struct
                                                 fun onModify _ = return ()
                                             end)
 
+    structure EditHint = EditableTable.Make(struct
+                                                val tab = hint
+                                                val labels = {PsetNum = "Pset#",
+                                                              ReleaseAt = "Release at",
+                                                              Title = "Title",
+                                                              Text = "Text"}
+
+                                                val widgets = {PsetNum = Widget.foreignbox_default (SELECT (pset.PsetNum) FROM pset ORDER BY pset.PsetNum) 0,
+                                                               ReleaseAt = _,
+                                                               Title = _,
+                                                               Text = Widget.htmlbox}
+
+                                                val permission = adminPerm
+                                                fun onAdd _ = return ()
+                                                fun onDelete _ = return ()
+                                                fun onModify _ = return ()
+                                            end)
+
     structure EditPossOh = EditableTable.Make(struct
                                                   val tab = possibleOfficeHoursTime
                                                   val labels = {Time = "Time"}
@@ -722,6 +744,16 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
+        hints <- queryX1 (SELECT hint.PsetNum, hint.Title, hint.Text
+                          FROM hint
+                          WHERE hint.ReleaseAt < CURRENT_TIMESTAMP
+                          ORDER BY hint.ReleaseAt DESC)
+                 (fn r => <xml><tr>
+                   <td>{[r.PsetNum]}</td>
+                   <td>{[r.Title]}</td>
+                   <td>{Widget.html r.Text}</td>
+                 </tr></xml>);
+
         Theme.tabbed "MIT 6.887, Spring 2017, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
@@ -760,6 +792,13 @@ structure Private = struct
             <h2>Forum</h2>
           </xml>,
           PsetForum.ui {PsetNum = psr.PsetNum})),
+         (Some "Pset Hints",
+          Ui.const <xml>
+            <table class="bs3-table table-striped">
+              <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
+              {hints}
+            </table>
+          </xml>),
 
          (case lec of
               None => None
@@ -861,7 +900,7 @@ structure Private = struct
                                                val query = (SELECT user.Kerberos, user.UserName
                                                             FROM user
                                                             WHERE user.IsStudent
-                                                            ORDER BY user.UserName DESC)
+                                                            ORDER BY user.UserName)
 
                                                val labels = {Kerberos = "Kerberos",
                                                              UserName = "Name"}
@@ -1050,6 +1089,8 @@ structure Private = struct
                        AdminCal.ui calBounds),
                       (Some "News",
                        Ann.ui),
+                      (Some "Hints",
+                       EditHint.ui),
 
                       (case nlec of
                            None => None
