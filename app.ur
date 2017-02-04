@@ -118,6 +118,42 @@ table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When :
 val psetGradeShow : show {PsetNum : int, PsetStudent : string}
   = mkShow (fn r => "Pset " ^ show r.PsetNum ^ ", " ^ r.PsetStudent)
 
+val oneDayInSeconds = 24 * 60 * 60
+val penaltyPerDay = 20
+
+fun latePenalty key r =
+    let
+        val sub = PsetSub.submission
+    in
+        due <- oneRowE1 (SELECT (pset.Due)
+                         FROM pset
+                         WHERE pset.PsetNum = {[key.PsetNum]});
+        turnedIn <- oneRowE1 (SELECT (sub.When)
+                              FROM sub
+                              WHERE sub.UserName = {[key.PsetStudent]}
+                                AND sub.PsetNum = {[key.PsetNum]}
+                              ORDER BY sub.When DESC
+                              LIMIT 1);
+        let
+            val lateBy = diffInSeconds due turnedIn
+        in
+            if lateBy <= 0 then
+                (* On time! *)
+                return r
+            else
+                let
+                    val daysLate = lateBy / oneDayInSeconds
+                    val daysLate = if lateBy % oneDayInSeconds = 0 then
+                                       daysLate
+                                   else
+                                       daysLate + 1
+                    val adjustedGrade = r.Grade - daysLate * penaltyPerDay
+                in
+                    return (r -- #Grade ++ {Grade = max adjustedGrade 0})
+                end
+        end
+    end
+
 structure PsetGrade = Review.Make(struct
                                       con reviewer = #Grader
                                       con reviewed = [PsetNum = _, PsetStudent = _]
@@ -127,6 +163,7 @@ structure PsetGrade = Review.Make(struct
                                       val widgets = {Comment = Widget.htmlbox} ++ _
                                       fun summarize r = txt r.Grade
                                       val whoami = u <- whoamiStaff; return (Some u)
+                                      val adjust = latePenalty
                                   end)
 
 val gradeTree = Grades.assignments
@@ -256,7 +293,7 @@ val courseInfo =
 
       <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  In roughly the last month of class, the Coq-feature lectures will be replaced by presentations on full-scale research projects at MIT that use Coq to establish correctness of fairly realistic software or hardware systems.  (The details are open to influence by the interests of the students, but the instructor's current guess is lectures on <a href="http://css.csail.mit.edu/fscq/">FSCQ</a>, <a href="http://plv.csail.mit.edu/fiat/">Fiat</a>, <a href="https://github.com/mit-plv/fiat-crypto">Fiat Cryptography</a>, and <a href="http://plv.csail.mit.edu/kami/">Kami</a>.)</p>
 
-      <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later.</p>
+      <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)</p>
 
       <p>It takes a while to internalize all the pro trips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i>, in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
