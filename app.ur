@@ -466,7 +466,7 @@ structure PublicCal = Calendar.Make(struct
                                     end)
 
 val calUi = Ui.seq (Ui.h4 <xml>
-  Lecture and lab are in 34-304.
+  Lecture is in 34-304.
 </xml>, PublicCal.ui calBounds)
 
 val forumAccess = staff <- amStaff;
