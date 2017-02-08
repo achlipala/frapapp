@@ -237,7 +237,7 @@ val courseInfo =
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 34-304</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/psets">GitHub repo with problem sets</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring17">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
