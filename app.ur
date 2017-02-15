@@ -467,7 +467,7 @@ structure PublicCal = Calendar.Make(struct
 
 val calUi = Ui.seq (Ui.h4 <xml>
   Lecture is in 34-304.<br/>
-  Joonwon's office hours are in 24-316, while Adam's are in his office 32-G842.
+  Joonwon's Monday and Wednesday office hours are in 34-301 (usually 4 PM to 7 PM), while Joonwon's Thursday office hours are in 34-302 (usually 3 PM to 6 PM).
 </xml>, PublicCal.ui calBounds)
 
 val forumAccess = staff <- amStaff;
