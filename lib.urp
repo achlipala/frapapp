@@ -10,6 +10,7 @@ safeGet Private/student
 safeGet Private/psetGrades
 safeGet Private/oldPset
 safeGet Private/oldLab
+safeGet Private/oldPsetStaff
 safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
 alwaysInline App/Sm/next

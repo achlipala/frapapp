@@ -731,7 +731,7 @@ structure Private = struct
               
               <hr/>
 
-              <h3>Specification</h3>
+              <h3>Solution</h3>
           </xml>),
           PsetSpec.AllFilesAllUsers.ui {PsetNum = id},
           Ui.const <xml>
@@ -817,7 +817,7 @@ structure Private = struct
            
             <hr/>
 
-            <h3>Specification</h3>
+            <h3>Solution</h3>
           </xml>),
           PsetSpec.AllFilesAllUsers.ui {PsetNum = psr.PsetNum},
           Ui.const <xml>
@@ -1051,6 +1051,26 @@ structure Private = struct
                                                                 PsetNum = "Pset#"}
                                               end)
 
+    fun oldPsetStaff id =
+        u <- whoamiStaff;
+        ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
+                       FROM pset
+                       WHERE pset.PsetNum = {[id]});
+        Theme.simple ("MIT 6.887 Staff: Pset " ^ show id)
+        (Ui.seq
+             (Ui.constM (fn ctx => <xml>
+               <h2>Pset {[id]}</h2>
+               <h3>Released: {[ps.Released]}<br/>
+                 Due: {[ps.Due]}</h3>
+                 {Widget.html ps.Instructions}
+
+                 {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
+                                 (PsetSpec.newUpload {PsetNum = id})}
+                 
+                 <hr/>
+             </xml>),
+              PsetSpec.AllFilesAllUsers.ui {PsetNum = id}))
+
     fun staff masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -1114,6 +1134,12 @@ structure Private = struct
                                     Released = minTime,
                                     Due = minTime,
                                     Instructions = ""} nps);
+
+        oldPsets <- queryX1 (SELECT pset.PsetNum
+                             FROM pset
+                             WHERE pset.Due < CURRENT_TIMESTAMP
+                             ORDER BY pset.Due)
+                            (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
         Theme.tabbed "MIT 6.887, Spring 2017 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
@@ -1211,6 +1237,12 @@ structure Private = struct
 
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Global Forum",
                        GlobalForum.ui),
+                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
+                       Ui.const <xml>
+                         <table class="bs3-table table-striped">
+                           {oldPsets}
+                         </table>
+                       </xml>),
                       (Some "Students",
                        Students.ui),
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Time Stats",
