@@ -627,6 +627,10 @@ structure Private = struct
         b <- amInstructor;
         return {Add = b, Delete = b, Modify = b}
 
+    val staffPerm =
+        b <- amStaff;
+        return {Add = b, Delete = b, Modify = b}
+
     structure EditUser = EditableTable.Make(struct
                                                 val tab = user
                                                 val labels = {Kerberos = "Kerberos",
@@ -663,7 +667,7 @@ structure Private = struct
                                                                Title = _,
                                                                Text = Widget.htmlbox}
 
-                                                val permission = adminPerm
+                                                val permission = staffPerm
                                                 fun onAdd _ = return ()
                                                 fun onDelete _ = return ()
                                                 fun onModify _ = return ()
