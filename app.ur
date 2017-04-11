@@ -21,6 +21,11 @@ table lecture : { LectureNum : int, LectureTitle : string, When : time, Descript
 table pset : { PsetNum : int, Released : time, Due : time, GradesDue : time, Instructions : string }
   PRIMARY KEY PsetNum
 
+table extension : { PsetNum : int, UserName : string, Until : time }
+  PRIMARY KEY (PsetNum, UserName),
+  CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE,
+  CONSTRAINT UserName FOREIGN KEY UserName REFERENCES user(UserName) ON UPDATE CASCADE
+
 table hint : { PsetNum : int, Title : string, Text : string, ReleaseAt : time }
   PRIMARY KEY (PsetNum, Title),
   CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE
@@ -125,9 +130,15 @@ fun latePenalty key r =
     let
         val sub = PsetSub.submission
     in
-        due <- oneRowE1 (SELECT (pset.Due)
-                         FROM pset
-                         WHERE pset.PsetNum = {[key.PsetNum]});
+        due <- oneOrNoRowsE1 (SELECT (extension.Until)
+                              FROM extension
+                              WHERE extension.PsetNum = {[key.PsetNum]}
+                                AND extension.UserName = {[key.PsetStudent]});
+        due <- (case due of
+                    Some v => return v
+                  | None => oneRowE1 (SELECT (pset.Due)
+                                      FROM pset
+                                      WHERE pset.PsetNum = {[key.PsetNum]}));
         turnedIn <- oneRowE1 (SELECT (sub.When)
                               FROM sub
                               WHERE sub.UserName = {[key.PsetStudent]}
@@ -654,6 +665,22 @@ structure Private = struct
                                                 fun onDelete _ = return ()
                                                 fun onModify _ = return ()
                                             end)
+
+    structure EditExtension = EditableTable.Make(struct
+                                                     val tab = extension
+                                                     val labels = {PsetNum = "Pset",
+                                                                   UserName = "User",
+                                                                   Until = "New Deadline"}
+
+                                                     val widgets = {PsetNum = Widget.foreignbox_default (SELECT (pset.PsetNum) FROM pset ORDER BY pset.PsetNum) 0,
+                                                                    UserName = Widget.foreignbox_default (SELECT (user.UserName) FROM user WHERE user.IsStudent ORDER BY user.UserName) "",
+                                                                    Until = _}
+
+                                                     val permission = adminPerm
+                                                     fun onAdd _ = return ()
+                                                     fun onDelete _ = return ()
+                                                     fun onModify _ = return ()
+                                                 end)
 
     structure EditHint = EditableTable.Make(struct
                                                 val tab = hint
@@ -1288,6 +1315,8 @@ structure Private = struct
                        WS.ui),
                       (Some "Users",
                        EditUser.ui),
+                      (Some "Extensions",
+                       EditExtension.ui),
                       (Ui.when (st < make [#SteadyState] ()) "Possible OH times",
                        Ui.seq (Ui.h4 <xml>Enter times like "{[tm]}".  Only the time part will be shown to students.</xml>,
                                EditPossOh.ui)),
