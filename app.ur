@@ -115,7 +115,7 @@ structure PsetSub = Submission.Make(struct
                                     end)
 
 table psetGrade : { PsetNum : int, PsetStudent : string, Grader : string, When : time, Grade : int, Comment : string }
-  PRIMARY KEY (PsetNum, PsetStudent, Grader, When),
+  PRIMARY KEY (PsetNum, PsetStudent),
   CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE,
   CONSTRAINT Student FOREIGN KEY PsetStudent REFERENCES user(UserName) ON UPDATE CASCADE,
   CONSTRAINT Grader FOREIGN KEY Grader REFERENCES user(UserName) ON UPDATE CASCADE
