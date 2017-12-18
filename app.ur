@@ -1,9 +1,9 @@
 open Bootstrap3
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2017
+structure ThisTerm = Spring2018
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
-val mailFrom = "MIT 6.887 <frap@csail.mit.edu>"
+val mailFrom = "MIT 6.822 <frap@csail.mit.edu>"
 
 table user : { Kerberos : string, MitId : string, UserName : string, Password : option string,
                IsInstructor : bool, IsTA : bool, IsStudent : bool, IsListener : bool, HasDropped : bool,
@@ -237,18 +237,18 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2017</p>
+          <p>A graduate course at MIT in Spring 2018</p>
         </div>
       </div>
 
       <table class="bs3-table table-striped">
-        <tr> <th>Subject number:</th> <td>6.887</td> </tr>
+        <tr> <th>Subject number:</th> <td>6.822</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistant:</th> <td><a href="http://people.csail.mit.edu/joonwonc/">Joonwon Choi</a></td> </tr>
-        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 34-304</td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="http://www.ben-sherman.net/">Benjamin Sherman</a></td> </tr>
+        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 32-155</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring17">GitHub repo with problem sets</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring18">GitHub repo with problem sets</a> [coming soon]</h3>
 
       <h2>What's it all about?</h2>
 
@@ -256,7 +256,7 @@ val courseInfo =
 
       <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 8th.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 7th.</p>
 
       <h2>Major topics covered</h2>
 
@@ -270,6 +270,7 @@ val courseInfo =
         <tr><td>Model checking and abstraction: finitizing state spaces with clever relations</td></tr>
         <tr><td>Operational semantics: the standard approach to give meanings to programs</td></tr>
         <tr><td>Compiler verification</td></tr>
+        <tr><td>Abstract interpretation</td></tr>
 
         <tr><th>Type Systems</th></tr>
         <tr><td>Lambda-calculus semantics</td></tr>
@@ -302,21 +303,21 @@ val courseInfo =
 
       <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
 
-      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  In roughly the last month of class, the Coq-feature lectures will be replaced by presentations on full-scale research projects at MIT that use Coq to establish correctness of fairly realistic software or hardware systems.  (The details are open to influence by the interests of the students, but the instructor's current guess is lectures on <a href="http://css.csail.mit.edu/fscq/">FSCQ</a>, <a href="http://plv.csail.mit.edu/fiat/">Fiat</a>, <a href="https://github.com/mit-plv/fiat-crypto">Fiat Cryptography</a>, and <a href="http://plv.csail.mit.edu/kami/">Kami</a>.)</p>
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  New this semester, we'll make an effort to briefly survey some full-scale applications of Coq (and related tools) that build on the foundations we study, as we encounter them.</p>
 
       <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)</p>
 
-      <p>It takes a while to internalize all the pro trips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i>, in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
+      <p>It takes a while to internalize all the pro tips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i>, in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
-      <p><b>Academic integrity guidelines:</b> Learning to drive a proof assistant is hard work, and it's valuable to be able to ask for help from your classmates.  For that reason, we allow asking for help from classmates, not just the course staff, with no particular acknowledgment in turned-in solutions.  However, the requirement is that <i>you have entered your problem-set code/proofs yourself, without someone else looking over your shoulder telling you more or less what to type at every stage</i>.  Use your judgment about exactly which interaction styles will stay compatible with this rule.  You'll generally learn more as you spend time working through the parts of assignments where you don't wind up stuck on something, and it's generally valuable to seek help (from classmates or course staff) when you're stuck.</p>
+      <p><b>Academic-integrity guidelines:</b> Learning to drive a proof assistant is hard work, and it's valuable to be able to ask for help from your classmates.  For that reason, we allow asking for help from classmates, not just the course staff, with no particular acknowledgment in turned-in solutions.  However, the requirement is that <i>you have entered your problem-set code/proofs yourself, without someone else looking over your shoulder telling you more or less what to type at every stage</i>.  Use your judgment about exactly which interaction styles will stay compatible with this rule.  You'll generally learn more as you spend time working through the parts of assignments where you don't wind up stuck on something, and it's generally valuable to seek help (from classmates or course staff) when you're stuck.</p>
 
       <h2>Prerequisites</h2>
 
-      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.042 and 6.005/6.004 should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Coq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.820 also provides lightning-speed introductions to those languages.)</p>
+      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.042 and 6.031 should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Coq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.820 also provides lightning-speed introductions to those languages.)</p>
 
       <h2>Suggested reading</h2>
 
-      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from last year's offering of this subject, but which will have some moderate changes made as we go.</p>
+      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from last year's offering of this subject (numbered 6.887), but which will have some moderate changes made as we go.</p>
 
       <p>The course is intended to be self-contained, and notes and example Coq code will be in <a href="https://github.com/achlipala/frap">the book's GitHub repo</a>.  We'll also be using a custom Coq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
 
@@ -530,7 +531,7 @@ fun onNewMessage kind getUsers r =
               (fn {User = {UserName = name, Kerberos = kerb}} hs =>
                   return (Mail.bcc (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
         let
-            val textm = "Let it be known that there is a new MIT 6.887 "
+            val textm = "Let it be known that there is a new MIT 6.822 "
                         ^ kind
                         ^ " forum message posted by "
                         ^ r.Who
@@ -539,7 +540,7 @@ fun onNewMessage kind getUsers r =
                         ^ ".\"\n"
 
             val htmlm = <xml>
-              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.887</a> {[kind]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
+              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[kind]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
             </xml>
         in
             Mail.send hs textm (Some htmlm)
@@ -624,7 +625,7 @@ structure Ann = News.Make(struct
                                           val htmlm = <xml>
                                             {Widget.html r.Body}
 
-                                            <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.887 site</a></p>
+                                            <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.822 site</a></p>
                                           </xml>
                                       in
                                           Mail.send hs textm (Some htmlm)
@@ -750,7 +751,7 @@ structure Private = struct
         ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
                        FROM pset
                        WHERE pset.PsetNum = {[id]});
-        Theme.simple ("MIT 6.887: Pset " ^ show id) (Ui.seq
+        Theme.simple ("MIT 6.822: Pset " ^ show id) (Ui.seq
           (Ui.constM (fn ctx => <xml>
             <h2>Pset {[id]}</h2>
             <h3>Released: {[ps.Released]}<br/>
@@ -823,7 +824,7 @@ structure Private = struct
                    <td>{Widget.html r.Text}</td>
                  </tr></xml>);
 
-        Theme.tabbed "MIT 6.887, Spring 2017, student page"
+        Theme.tabbed "MIT 6.822, Spring 2018, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
@@ -955,7 +956,7 @@ structure Private = struct
                                                    IsInstructor = False,
                                                    IsTA = False}
                                    val amAuthorized = amInstructor
-                                   val expectedSubjectNumber = "6.887"
+                                   val expectedSubjectNumber = "6.822"
                                end)
 
     fun psetGrades n u =
@@ -1087,7 +1088,7 @@ structure Private = struct
         ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
                        FROM pset
                        WHERE pset.PsetNum = {[id]});
-        Theme.simple ("MIT 6.887 Staff: Pset " ^ show id)
+        Theme.simple ("MIT 6.822 Staff: Pset " ^ show id)
         (Ui.seq
              (Ui.constM (fn ctx => <xml>
                <h2>Pset {[id]}</h2>
@@ -1172,7 +1173,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        Theme.tabbed "MIT 6.887, Spring 2017 Staff"
+        Theme.tabbed "MIT 6.822, Spring 2018 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1306,7 +1307,7 @@ structure Private = struct
                            <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
                          </xml>);
 
-        Theme.tabbed "MIT 6.887, Spring 2017 Admin"
+        Theme.tabbed "MIT 6.822, Spring 2018 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1338,7 +1339,7 @@ end
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.887, Spring 2017"
+    Theme.tabbed "MIT 6.822, Spring 2018"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
@@ -1352,7 +1353,7 @@ val main =
                    calUi))
 
 val login =
-    Theme.simple "MIT 6.887, non-MIT user login" Auth.Login.ui
+    Theme.simple "MIT 6.822, non-MIT user login" Auth.Login.ui
 
 val index = return <xml><body>
   <a link={main}>Main</a>
