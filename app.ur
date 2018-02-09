@@ -486,7 +486,7 @@ structure PublicCal = Calendar.Make(struct
 
 val calUi = Ui.seq (Ui.h4 <xml>
   Lecture is in 32-155.<br/>
-  Recurring office-hours locations remain to be determined.
+  Office hours are in 24-321.
 </xml>, PublicCal.ui calBounds)
 
 val forumAccess = staff <- amStaff;
