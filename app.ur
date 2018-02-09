@@ -92,6 +92,13 @@ val amStaff = Auth.inGroups gsStaff
 val requireStaff = Auth.requireGroups gsStaff
 val getStaff = Auth.getGroupsWithMasquerade gsStaff
 
+val staffOnly =
+    b <- amStaff;
+    return (if b then
+                Calendar.Write
+            else
+                Calendar.Read)
+
 val showPset = mkShow (fn {PsetNum = n : int} => "Pset " ^ show n)
 
 structure PsetSub = Submission.Make(struct
@@ -396,7 +403,7 @@ structure LectureCal = Calendar.FromTable(struct
                                                                        <dyn signal={signal content}/>
                                                                      </xml>)
 
-                                              val auth = instructorOnly
+                                              val auth = staffOnly
                                               val showTime = True
                                           end)
 
@@ -443,7 +450,7 @@ structure PsetCal = Calendar.FromTable(struct
                                                                     <dyn signal={signal content}/>
                                                                   </xml>)
 
-                                           val auth = instructorOnly
+                                           val auth = staffOnly
                                            val showTime = True
                                        end)
 
@@ -460,7 +467,7 @@ structure OhCal = Calendar.FromTable(struct
                                           val kinds = {When = ""}
                                           val display = None
 
-                                          val auth = instructorOnly
+                                          val auth = staffOnly
                                           val showTime = True
 
                                           val ws = {OhUser = Widget.foreignbox_default
@@ -938,7 +945,7 @@ structure Private = struct
                                                                         <dyn signal={signal content}/>
                                                                       </xml>)
 
-                                               val auth = instructorOnly
+                                               val auth = staffOnly
                                                val showTime = True
                                            end)
 
