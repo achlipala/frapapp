@@ -21,5 +21,6 @@ timeFormat %m/%d/%Y %I:%M %p
 allow mime text/x-verilog
 allow url http://*
 allow url https://*
+allow url mailto:*
 
 app
