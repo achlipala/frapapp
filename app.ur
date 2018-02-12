@@ -30,7 +30,7 @@ table hint : { PsetNum : int, Title : string, Text : string, ReleaseAt : time }
   PRIMARY KEY (PsetNum, Title),
   CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE
 
-table officeHours : { OhUser : string, When : time }
+table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY When
 
 (* Bootstrap the database with an initial admin user. *)
@@ -454,16 +454,18 @@ structure PsetCal = Calendar.FromTable(struct
                                            val showTime = True
                                        end)
 
-val showOh = mkShow (fn {OhUser = s} => s ^ "'s office hours")
+val showOh = mkShow (fn {OhUser = s, LengthInHours = n : int} =>
+                        s ^ "'s office hours (" ^ show n ^ " hours)")
 
 structure OhCal = Calendar.FromTable(struct
                                           con tag = #OfficeHours
-                                          con key = [OhUser = _]
+                                          con key = [OhUser = _, LengthInHours = _]
                                           con times = [When]
                                           val tab = officeHours
                                           val title = "Office Hours"
                                           val labels = {OhUser = "Who",
-                                                        When = "When"}
+                                                        When = "When",
+                                                        LengthInHours = "Length in hours"}
                                           val kinds = {When = ""}
                                           val display = None
 
