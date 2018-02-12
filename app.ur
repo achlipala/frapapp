@@ -455,7 +455,8 @@ structure PsetCal = Calendar.FromTable(struct
                                        end)
 
 val showOh = mkShow (fn {OhUser = s, LengthInHours = n : int} =>
-                        s ^ "'s office hours (" ^ show n ^ " hours)")
+                        s ^ "'s office hours (" ^ show n ^ " hour"
+                        ^ (if n = 1 then "" else "s") ^ ")")
 
 structure OhCal = Calendar.FromTable(struct
                                           con tag = #OfficeHours
