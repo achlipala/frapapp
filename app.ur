@@ -1260,7 +1260,10 @@ structure Private = struct
                                          (PsetSpec.newUpload {PsetNum = lpsr.PsetNum})}
 
                          <hr/>
+
+                         <h2>Forum</h2>
                        </xml>),
+                               PsetForum.ui {PsetNum = lpsr.PsetNum},
                                PsetSpec.AllFilesAllUsers.ui {PsetNum = lpsr.PsetNum})),
 
                       (case lec of
