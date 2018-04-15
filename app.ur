@@ -513,8 +513,11 @@ fun emailOf kerb =
 fun toOf {UserName = name, Kerberos = kerb} =
     name ^ " <" ^ emailOf kerb ^ ">"
 
-fun onNewMessage [key] [[key] ~ [Thread, Subject, Who, Text]]
-                 (describe : $key -> string) getUsers (r : $(key ++ _)) =
+fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
+                 (describe : $key -> string)
+                 (getUsers : transaction (list string))
+                 (r : $(key ++ [Thread = time, Subject = string, Who = string, Text = string]))
+                 : transaction unit =
     us <- getUsers;
     us <- query (SELECT user.UserName
                  FROM user
@@ -552,7 +555,7 @@ fun onNewMessage [key] [[key] ~ [Thread, Subject, Who, Text]]
                         ^ ".\"\n"
 
             val htmlm = <xml>
-              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[kind]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
+              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
             </xml>
         in
             Mail.send hs textm (Some htmlm)
