@@ -132,6 +132,7 @@ val psetGradeShow : show {PsetNum : int, PsetStudent : string}
 
 val oneDayInSeconds = 24 * 60 * 60
 val penaltyPerDay = 20
+val gracePeriodInSeconds = 59
 
 fun latePenalty key r =
     let
@@ -155,7 +156,7 @@ fun latePenalty key r =
         let
             val lateBy = diffInSeconds due turnedIn
         in
-            if lateBy <= 0 then
+            if lateBy <= gracePeriodInSeconds then
                 (* On time! *)
                 return r
             else
@@ -512,7 +513,8 @@ fun emailOf kerb =
 fun toOf {UserName = name, Kerberos = kerb} =
     name ^ " <" ^ emailOf kerb ^ ">"
 
-fun onNewMessage kind getUsers r =
+fun onNewMessage [key] [[key] ~ [Thread, Subject, Who, Text]]
+                 (describe : $key -> string) getUsers (r : $(key ++ _)) =
     us <- getUsers;
     us <- query (SELECT user.UserName
                  FROM user
@@ -542,7 +544,7 @@ fun onNewMessage kind getUsers r =
                   return (Mail.bcc (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
         let
             val textm = "Let it be known that there is a new MIT 6.822 "
-                        ^ kind
+                        ^ describe (r --- _)
                         ^ " forum message posted by "
                         ^ r.Who
                         ^ " in the thread \""
@@ -562,7 +564,7 @@ structure GlobalForum = GlobalDiscussion.Make(struct
                                                   val access = forumAccess
                                                   val showOpenVsClosed = True
                                                   val allowPrivate = True
-                                                  val onNewMessage = onNewMessage "global"
+                                                  val onNewMessage = onNewMessage (fn _ => "global")
                                               end)
 
 structure LectureForum = TableDiscussion.Make(struct
@@ -575,7 +577,7 @@ structure LectureForum = TableDiscussion.Make(struct
                                                   fun access _ = forumAccess
                                                   val showOpenVsClosed = True
                                                   val allowPrivate = True
-                                                  val onNewMessage = onNewMessage "lecture"
+                                                  val onNewMessage = onNewMessage (fn r => "Lecture " ^ show r.LectureNum)
                                               end)
 
 structure PsetForum = TableDiscussion.Make(struct
@@ -588,7 +590,7 @@ structure PsetForum = TableDiscussion.Make(struct
                                                fun access _ = forumAccess
                                                val showOpenVsClosed = True
                                                val allowPrivate = True
-                                               val onNewMessage = onNewMessage "pset"
+                                               val onNewMessage = onNewMessage (fn r => "Pset " ^ show r.PsetNum)
                                            end)
 
 structure LectureTodo = Todo.Happenings(struct
