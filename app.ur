@@ -1,4 +1,4 @@
-open Bootstrap3
+open Bootstrap4
 structure Theme = Ui.Make(Style)
 structure ThisTerm = Spring2018
 val calBounds = {FromDay = ThisTerm.regDay,
@@ -249,7 +249,7 @@ val courseInfo =
         </div>
       </div>
 
-      <table class="bs3-table table-striped">
+      <table class="bs-table table-striped">
         <tr> <th>Subject number:</th> <td>6.822</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
         <tr> <th>Teaching assistant:</th> <td><a href="http://www.ben-sherman.net/">Benjamin Sherman</a></td> </tr>
@@ -270,7 +270,7 @@ val courseInfo =
 
       <p>Here's a tentative syllabus.</p>
 
-      <table class="bs3-table table-striped">
+      <table class="bs-table table-striped">
         <tr><th>Foundations</th></tr>
         <tr><td>Inductive types, recursive functions, induction, and rewriting: the heart of formal reasoning, and useful for defining and reasoning about language interpreters</td></tr>
         <tr><td>Data abstraction in the presence of formal proofs</td></tr>
@@ -300,7 +300,7 @@ val courseInfo =
 
       <p>That's quite a lot of topics, isn't it?  We'll be sticking to techniques for proving <i>safety properties</i> (and we'll clarify what that term means), so there's even a whole other world of foundational ideas for proving other sorts of program properties!  Nonetheless, a key goal of the course is to clarify how all of these techniques can be seen as applying a few <b>big ideas</b> of semantics and verification:</p>
 
-      <table class="bs3-table table-striped">
+      <table class="bs-table table-striped">
         <tr><th>Encoding</th> <td>There are an awful lot of different ways to formalize the shape and behavior of programs, and the choice of a method can have big consequences for how easy the proofs are.</td></tr>
         <tr><th>Invariants</th> <td>Almost all program proofs come down to finding invariants of state machines.  That is, we prove that some property holds of all reachable states of a formal system, and we show that the property implies the one we started out trying to prove.</td></tr>
         <tr><th>Abstraction</th> <td>Often we replace one state machine with a simpler one that somehow represents it faithfully enough with respect to the property of interest.</td></tr>
@@ -879,7 +879,7 @@ structure Private = struct
           PsetForum.ui {PsetNum = psr.PsetNum})),
          (Some "Pset Hints",
           Ui.const <xml>
-            <table class="bs3-table table-striped">
+            <table class="bs-table table-striped">
               <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
               {hints}
             </table>
@@ -917,7 +917,7 @@ structure Private = struct
                   PsetGrade.Several.ui (WHERE T.PsetStudent = {[u]}))),
          (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
           Ui.const <xml>
-            <table class="bs3-table table-striped">
+            <table class="bs-table table-striped">
               {oldPsets}
             </table>
           </xml>),
@@ -1289,7 +1289,7 @@ structure Private = struct
                        GlobalForum.ui),
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
                        Ui.const <xml>
-                         <table class="bs3-table table-striped">
+                         <table class="bs-table table-striped">
                            {oldPsets}
                          </table>
                        </xml>),
@@ -1341,13 +1341,13 @@ structure Private = struct
                                EditPossOh.ui)),
                       (Some "Student Masquerade",
                        Ui.const <xml>
-                         <table class="bs3-table table-striped">
+                         <table class="bs-table table-striped">
                            {masq}
                          </table>
                        </xml>),
                       (Some "TA Masquerade",
                        Ui.const <xml>
-                         <table class="bs3-table table-striped">
+                         <table class="bs-table table-striped">
                            {smasq}
                          </table>
                        </xml>))
