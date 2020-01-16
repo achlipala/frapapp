@@ -1,4 +1,4 @@
-library $/upo_mit/spring2018
+library $/upo_mit/spring2020
 allow url https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
 allow url https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css
 script https://code.jquery.com/jquery-3.2.1.slim.min.js

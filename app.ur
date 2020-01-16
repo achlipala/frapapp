@@ -1,6 +1,6 @@
 open Bootstrap4
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2018
+structure ThisTerm = Spring2020
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 val mailFrom = "MIT 6.822 <frap@csail.mit.edu>"
@@ -245,18 +245,18 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2018</p>
+          <p>A graduate course at MIT in Spring 2020</p>
         </div>
       </div>
 
       <table class="bs-table table-striped">
         <tr> <th>Subject number:</th> <td>6.822</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistant:</th> <td><a href="http://www.ben-sherman.net/">Benjamin Sherman</a></td> </tr>
-        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 32-155</td> </tr>
+        <tr> <th>Teaching assistants:</th> <td><a href="http://andres.systems/">Andres Erbsen</a><br/><a href="https://samuelgruetter.net/">Sam Gruetter</a></td> </tr>
+        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 2-105</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring18">GitHub repo with problem sets</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring20">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
@@ -264,7 +264,7 @@ val courseInfo =
 
       <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 7th.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 3rd.</p>
 
       <h2>Major topics covered</h2>
 
@@ -311,7 +311,7 @@ val courseInfo =
 
       <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
 
-      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  New this semester, we'll make an effort to briefly survey some full-scale applications of Coq (and related tools) that build on the foundations we study, as we encounter them.</p>
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.</p>
 
       <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)</p>
 
@@ -325,7 +325,7 @@ val courseInfo =
 
       <h2>Suggested reading</h2>
 
-      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from last year's offering of this subject (numbered 6.887), but which will have some moderate changes made as we go.</p>
+      <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from the prior offering of this subject, but which will likely have small changes made as we go.</p>
 
       <p>The course is intended to be self-contained, and notes and example Coq code will be in <a href="https://github.com/achlipala/frap">the book's GitHub repo</a>.  We'll also be using a custom Coq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
 
@@ -334,7 +334,7 @@ val courseInfo =
       <ul>
         <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
         <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
-        <li><a href="http://www.cis.upenn.edu/~bcpierce/sf/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
+        <li><a href="https://softwarefoundations.cis.upenn.edu/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
       </ul>
 
       <h3>Semantics and program proof</h3>
@@ -513,6 +513,8 @@ fun emailOf kerb =
 fun toOf {UserName = name, Kerberos = kerb} =
     name ^ " <" ^ emailOf kerb ^ ">"
 
+val sendMail = Mail.send "smtp://localhost" False None "" ""
+
 fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                  (describe : $key -> string)
                  (getUsers : transaction (list string))
@@ -558,7 +560,7 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
               Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
             </xml>
         in
-            Mail.send hs textm (Some htmlm)
+            sendMail hs textm (Some htmlm)
         end
     end
 
@@ -643,7 +645,7 @@ structure Ann = News.Make(struct
                                             <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.822 site</a></p>
                                           </xml>
                                       in
-                                          Mail.send hs textm (Some htmlm)
+                                          sendMail hs textm (Some htmlm)
                                       end
                                   end
                           end)
@@ -839,7 +841,7 @@ structure Private = struct
                    <td>{Widget.html r.Text}</td>
                  </tr></xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2018, student page"
+        Theme.tabbed "MIT 6.822, Spring 2020, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
@@ -1188,7 +1190,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2018 Staff"
+        Theme.tabbed "MIT 6.822, Spring 2020 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1325,7 +1327,7 @@ structure Private = struct
                            <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
                          </xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2018 Admin"
+        Theme.tabbed "MIT 6.822, Spring 2020 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1357,7 +1359,7 @@ end
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.822, Spring 2018"
+    Theme.tabbed "MIT 6.822, Spring 2020"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
