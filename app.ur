@@ -60,7 +60,7 @@ structure Auth = MitCert.Make(struct
                                                        LastName = "",
                                                        FirstName = "",
                                                        MiddleInitial = ""}
-                                  val allowMasquerade = Some (make [#IsInstructor] ())
+                                  val allowMasquerade = Some (make [#IsInstructor] () :: [])
                                   val requireSsl = True
                               end)
 
