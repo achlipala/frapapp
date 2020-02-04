@@ -609,6 +609,15 @@ structure LectureTodo = Todo.Happenings(struct
                                             fun render r = <xml>{[r]}</xml>
                                         end)
 
+fun chunked ls maxLen =
+    case ls of
+        [] => []
+      | _ =>
+        if List.length ls <= maxLen then
+            ls :: []
+        else
+            List.take maxLen ls :: chunked (List.drop maxLen ls) maxLen
+
 structure Ann = News.Make(struct
                               val title = Widget.textbox
                               val body = Widget.htmlbox
@@ -622,30 +631,34 @@ structure Ann = News.Make(struct
 
                               fun onNewPost r =
                                   let
-                                      val hs = Mail.empty
-                                                   |> Mail.from mailFrom
-                                                   |> Mail.to mailFrom
-                                                   |> Mail.subject ("Announcement: " ^ r.Title)
+                                      val sendOne = fn bccs =>
+                                          let
+                                              val hs = Mail.empty
+                                                           |> Mail.from mailFrom
+                                                           |> Mail.to mailFrom
+                                                           |> Mail.subject ("Announcement: " ^ r.Title)
+
+                                              val hs = List.foldl Mail.bcc hs bccs
+
+                                              val textm = Html.unhtml r.Body
+
+                                              val htmlm = <xml>
+                                                {Widget.html r.Body}
+
+                                                <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.822 site</a></p>
+                                              </xml>
+                                          in
+                                              sendMail hs textm (Some htmlm)
+                                          end
                                   in
-                                      hs <- query (SELECT user.UserName, user.Kerberos
-                                                   FROM user
-                                                   WHERE user.IsInstructor
-                                                     OR user.IsTA
-                                                     OR user.IsStudent
-                                                     OR user.IsListener)
-                                                  (fn {User = r} hs =>
-                                                      return (Mail.bcc (toOf r) hs)) hs;
-                                      let
-                                          val textm = Html.unhtml r.Body
-
-                                          val htmlm = <xml>
-                                            {Widget.html r.Body}
-
-                                            <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.822 site</a></p>
-                                          </xml>
-                                      in
-                                          sendMail hs textm (Some htmlm)
-                                      end
+                                      recips <- List.mapQuery (SELECT user.UserName, user.Kerberos
+                                                               FROM user
+                                                               WHERE user.IsInstructor
+                                                                 OR user.IsTA
+                                                                 OR user.IsStudent
+                                                                 OR user.IsListener)
+                                                              (fn {User = r} => toOf r);
+                                      List.app sendOne (chunked recips 10)
                                   end
                           end)
 
