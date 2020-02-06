@@ -530,37 +530,33 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                           u :: us)) us;
 
     u <- Auth.whoami;
+    us <- return (case u of
+                      None => error <xml>Posting message while not logged in</xml>
+                    | Some u => List.filter (fn u' => u' <> u) us);
     let
-        val us = case u of
-                     None => error <xml>Posting message while not logged in</xml>
-                   | Some u => List.filter (fn u' => u' <> u) us
+        fun sendOne to =
+            let
+                val hs = Mail.empty
+                             |> Mail.from mailFrom
+                             |> Mail.to to
+                             |> Mail.subject "New forum message"
 
-        val hs = Mail.empty
-                     |> Mail.from mailFrom
-                     |> Mail.to mailFrom
-                     |> Mail.subject "New forum message"
+                val textm = "Let it be known that there is a new MIT 6.822 "
+                            ^ describe (r --- _)
+                            ^ " forum message posted by "
+                            ^ r.Who
+                            ^ " in the thread \""
+                            ^ r.Subject
+                            ^ ".\"\n"
+
+                val htmlm = <xml>
+                  Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
+                </xml>
+            in
+                sendMail hs textm (Some htmlm)
+            end
     in
-        hs <- query (SELECT user.UserName, user.Kerberos
-                     FROM user
-                     WHERE {List.foldl (fn name p =>
-                         (WHERE user.UserName = {[name]} OR {p})) (WHERE FALSE) us})
-              (fn {User = {UserName = name, Kerberos = kerb}} hs =>
-                  return (Mail.bcc (toOf {UserName = name, Kerberos = kerb}) hs)) hs;
-        let
-            val textm = "Let it be known that there is a new MIT 6.822 "
-                        ^ describe (r --- _)
-                        ^ " forum message posted by "
-                        ^ r.Who
-                        ^ " in the thread \""
-                        ^ r.Subject
-                        ^ ".\"\n"
-
-            val htmlm = <xml>
-              Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
-            </xml>
-        in
-            sendMail hs textm (Some htmlm)
-        end
+        List.app sendOne us
     end
 
 structure GlobalForum = GlobalDiscussion.Make(struct
