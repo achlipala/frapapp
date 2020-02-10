@@ -538,10 +538,13 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                     | Some u => List.filter (fn u' => u' <> u) us);
     let
         fun sendOne to =
+            kerb <- oneRowE1 (SELECT (user.Kerberos)
+                              FROM user
+                              WHERE user.UserName = {[to]});
             let
                 val hs = Mail.empty
                              |> Mail.from mailFrom
-                             |> Mail.to to
+                             |> Mail.to (toOf {UserName = to, Kerberos = kerb})
                              |> Mail.subject "New forum message"
 
                 val textm = "Let it be known that there is a new MIT 6.822 "
