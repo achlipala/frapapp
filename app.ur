@@ -833,15 +833,13 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        hints <- queryX1 (SELECT hint.PsetNum, hint.Title, hint.Text
-                          FROM hint
-                          WHERE hint.ReleaseAt < CURRENT_TIMESTAMP
-                          ORDER BY hint.ReleaseAt DESC)
-                 (fn r => <xml><tr>
-                   <td>{[r.PsetNum]}</td>
-                   <td>{[r.Title]}</td>
-                   <td>{Widget.html r.Text}</td>
-                 </tr></xml>);
+        hints <- List.mapQueryM (SELECT hint.PsetNum, hint.Title, hint.Text
+                                 FROM hint
+                                 WHERE hint.ReleaseAt < CURRENT_TIMESTAMP
+                                 ORDER BY hint.ReleaseAt DESC)
+                                (fn r =>
+                                    expanded <- source False;
+                                    return (r.Hint ++ {Expanded = expanded}));
 
         Theme.tabbed "MIT 6.822, Spring 2020, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
@@ -885,7 +883,20 @@ structure Private = struct
           Ui.const <xml>
             <table class="bs-table table-striped">
               <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
-              {hints}
+              {List.mapX (fn r => <xml><tr>
+                <td>{[r.PsetNum]}</td>
+                <td>{[r.Title]}</td>
+                <td>
+                  <dyn signal={exp <- signal r.Expanded;
+                               return (if exp then
+                                           Widget.html r.Text
+                                       else
+                                           <xml><button class="btn btn-primary"
+                                                        onclick={fn _ => set r.Expanded True}>
+                                             <span class="glyphicon glyphicon-chevron-down"/> Show
+                                           </button></xml>)}/>
+                </td>
+              </tr></xml>) hints}
             </table>
           </xml>),
 
