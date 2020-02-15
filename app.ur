@@ -33,7 +33,7 @@ table hint : { PsetNum : int, Title : string, Text : string, ReleaseAt : time }
 table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
-                    
+
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
   anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
