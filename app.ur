@@ -554,10 +554,12 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                             ^ r.Who
                             ^ " in the thread \""
                             ^ r.Subject
-                            ^ ".\"\n"
+                            ^ ".\"  It reads:\n\n"
+                            ^ Html.unhtml r.Text
 
                 val htmlm = <xml>
-                  Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>.
+                  <p>Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>. It reads:</p>
+                  <p>{Widget.html r.Text}</p>
                 </xml>
             in
                 sendMail hs textm (Some htmlm)
