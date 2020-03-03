@@ -822,7 +822,7 @@ structure Private = struct
         ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
                             FROM pset
                             WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
-                            ORDER BY pset.Due DESC
+                            ORDER BY pset.Due
                             LIMIT 1);
 
         psr <- return (Option.get {PsetNum = 0,
