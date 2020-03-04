@@ -1102,6 +1102,83 @@ structure Private = struct
                                                              PsetNum = "Pset#"}
                                            end)
 
+    structure DetailedTime : Ui.S0 = struct
+        type a = list (list (int (* pset# *) * int (* hours spent *))) (* list is of students, in random order *)
+
+        fun mergeOne (r : { UserName : string, PsetNum : int, Hours : option int }) (a : list (string * list (int * int))) =
+            case a of
+                [] => return ((r.UserName, (r.PsetNum, Option.get 0 r.Hours) :: []) :: [])
+              | (u1, psets) :: a' =>
+                if u1 = r.UserName then
+                    return ((u1, (r.PsetNum, Option.get 0 r.Hours) :: psets) :: a')
+                else
+                    return ((r.UserName, (r.PsetNum, Option.get 0 r.Hours) :: []) :: a)
+
+        val submission = PsetSub.submission
+
+        val create =
+            users <- query (SELECT submission.UserName AS UserName, submission.PsetNum AS PsetNum, MAX(submission.Hours) AS Hours
+                            FROM submission
+                            GROUP BY submission.UserName, submission.PsetNum
+                            ORDER BY submission.UserName DESC, submission.PsetNum DESC)
+                           mergeOne [];
+            users <- List.mapM (fn (_, psets) =>
+                                   r <- rand;
+                                   return (r, psets)) users;
+            return (List.mp (fn (_, psets) => psets) (List.sort (fn (r1, _) (r2, _) => r1 > r2) users))
+
+        fun onload _ = return ()
+
+        fun firstnX (n : int) : xtr =
+            if n <= 0 then
+                <xml></xml>
+            else
+                <xml>
+                  {firstnX (n - 1)}
+                  <th>{[n]}</th>
+                </xml>
+
+        fun oneStudent (nextPset : int) (maxPset : int) (psets : list (int * int)) : xtr =
+            case psets of
+                [] =>
+                if nextPset > maxPset then
+                    <xml></xml>
+                else
+                    <xml>
+                      <td></td>
+                      {oneStudent (nextPset + 1) maxPset []}
+                    </xml>
+              | (num, time) :: psets' =>
+                if num = nextPset then
+                    <xml>
+                      <td>{[time]}</td>
+                      {oneStudent (nextPset + 1) maxPset psets'}
+                    </xml>
+                else
+                    <xml>
+                      <td></td>
+                      {oneStudent (nextPset + 1) maxPset psets}
+                    </xml>
+                      
+        fun render _ a =
+            let
+                val maxPset = List.foldl (fn psets highest =>
+                                             List.foldl (fn (n, _) highest => max n highest) highest psets) 0 a
+            in
+                <xml>
+                  <table class="bs-table table-striped">
+                    <tr>{firstnX maxPset}</tr>
+                    {List.mapX (fn psets =>
+                                   <xml><tr>{oneStudent 1 maxPset psets}</tr></xml>) a}
+                  </table>
+                </xml>
+            end
+
+        val ui = {Create = create,
+                  Onload = onload,
+                  Render = render}
+    end
+                          
     structure Suggestions = SimpleQuery1.Make(struct
                                                   val submission = PsetSub.submission
                                                                    
@@ -1315,6 +1392,8 @@ structure Private = struct
                        Students.ui),
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Time Stats",
                        TimeSpent.ui),
+                      (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Full Pset Times",
+                       DetailedTime.ui),
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Suggestions",
                        Suggestions.ui),
                       (Ui.when (st > make [#PollingAboutOfficeHours] ()) "Grades",
