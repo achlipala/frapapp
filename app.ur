@@ -1193,6 +1193,35 @@ structure Private = struct
                                                                 PsetNum = "Pset#"}
                                               end)
 
+
+    structure UploadGrades : Ui.S0 = struct
+        type a = source string
+
+        val create = source ""
+
+        fun onload _ = return ()
+
+        fun upload text =
+            u <- whoamiStaff;
+            rows <- return (@Csv.parse _ _ (_ : folder [PsetNum = int, PsetStudent = string, Grade = int, Comment = string]) #"," 0 text);
+            List.app (fn r => dml (INSERT INTO psetGrade(PsetNum, PsetStudent, Grader, When, Grade, Comment)
+                                   VALUES ({[r.PsetNum]}, {[r.PsetStudent]}, {[u]}, CURRENT_TIMESTAMP, {[r.Grade]}, {[r.Comment]}))) rows
+
+        fun render _ s = <xml>
+          <p>Please paste CSV rows with this field order: <i>Pset#</i>, <i>Student Name</i>, <i>Score</i>, <i>Comments</i></p>
+          <ctextarea class="form-control" cols={20} source={s}/>
+          <button value="Import"
+                  class="btn btn-primary"
+                  onclick={fn _ =>
+                              s <- get s;
+                              rpc (upload s)}/>
+        </xml>
+
+        val ui = {Create = create,
+                  Onload = onload,
+                  Render = render}
+    end
+
     fun oldPsetStaff id =
         u <- whoamiStaff;
         ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
@@ -1291,6 +1320,8 @@ structure Private = struct
                       (Some "Todo",
                        Ui.seq (ContentTodo.OneUser.ui u,
                                StaffTodo.OneUser.ui u)),
+                      (Some "Upload Grades",
+                       UploadGrades.ui),
                       (Some "Calendar",
                        AdminCal.ui calBounds),
                       (Some "News",
