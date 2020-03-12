@@ -1203,7 +1203,7 @@ structure Private = struct
 
         fun upload text =
             u <- whoamiStaff;
-            rows <- return (@Csv.parse _ _ (_ : folder [PsetNum = int, PsetStudent = string, Grade = int, Comment = string]) #"," 0 text);
+            (rows : list {PsetNum : int, PsetStudent : string, Grade : int, Comment : string}) <- return (Csv.parse #"," 0 text);
             List.app (fn r => dml (INSERT INTO psetGrade(PsetNum, PsetStudent, Grader, When, Grade, Comment)
                                    VALUES ({[r.PsetNum]}, {[r.PsetStudent]}, {[u]}, CURRENT_TIMESTAMP, {[r.Grade]}, {[r.Comment]}))) rows
 
