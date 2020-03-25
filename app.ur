@@ -900,6 +900,27 @@ structure Private = struct
               None => None
             | Some _ => Some "Current Pset [2]",
           psetUi psr' u),
+         (Some "Pset Hints",
+          Ui.const <xml>
+            <table class="bs-table table-striped">
+              <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
+              {List.mapX (fn r => <xml><tr>
+                <td>{[r.PsetNum]}</td>
+                <td>{[r.Title]}</td>
+                <td>
+                  <dyn signal={exp <- signal r.Expanded;
+                               return (if exp then
+                                           Widget.html r.Text
+                                       else
+                                           <xml><button class="btn btn-primary"
+                                                        onclick={fn _ => set r.Expanded True}>
+                                             <span class="glyphicon glyphicon-chevron-down"/> Show
+                                           </button></xml>)}/>
+                </td>
+              </tr></xml>) hints}
+            </table>
+          </xml>),
+
          (case lec of
               None => None
             | Some _ => Some "Last Lecture",
