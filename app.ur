@@ -799,6 +799,37 @@ structure Private = struct
           </xml>,
           PsetForum.ui {PsetNum = id}))
 
+    val defaultPset = Option.get {PsetNum = 0,
+                                  Released = minTime,
+                                  Due = minTime,
+                                  Instructions = ""}
+
+    fun psetUi psr u =
+        Ui.seq (Ui.constM (fn ctx => <xml>
+          <h2>Pset {[psr.PsetNum]}</h2>
+          <h3>Released: {[psr.Released]}<br/>
+          Due: {[psr.Due]}</h3>
+          {Widget.html psr.Instructions}<br/>
+
+          {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>New Submission</xml>
+                          (PsetSub.newUpload {PsetNum = psr.PsetNum})}
+
+          <hr/>
+
+          <h3>Solution</h3>
+        </xml>),
+        PsetSpec.AllFilesAllUsers.ui {PsetNum = psr.PsetNum},
+        Ui.const <xml>
+          <hr/>
+          <h2>Your Submissions</h2>
+        </xml>,
+        PsetSub.AllFiles.ui {Key = {PsetNum = psr.PsetNum}, User = u},
+        Ui.const <xml>
+          <hr/>
+          <h2>Forum</h2>
+        </xml>,
+        PsetForum.ui {PsetNum = psr.PsetNum})
+
     fun student masqAs =
         (case masqAs of
              "" => Auth.unmasquerade
@@ -819,16 +850,22 @@ structure Private = struct
                                     When = minTime,
                                     Description = ""} lec);
 
-        ps <- oneOrNoRows1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
-                            FROM pset
-                            WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
-                            ORDER BY pset.Due
-                            LIMIT 1);
+        pss <- queryL1 (SELECT pset.PsetNum, pset.Released, pset.Due, pset.Instructions
+                        FROM pset
+                        WHERE pset.Released < CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < pset.Due
+                        ORDER BY pset.Due, pset.PsetNum
+                        LIMIT 2);
+        (ps, ps') <- return (case pss of
+                                 [] => (None, None)
+                               | ps :: [] => (Some ps, None)
+                               | ps1 :: ps2 :: _ =>
+                                 if ps1.Due = ps2.Due then
+                                     (Some ps1, Some ps2)
+                                 else
+                                     (Some ps1, None));
 
-        psr <- return (Option.get {PsetNum = 0,
-                                   Released = minTime,
-                                   Due = minTime,
-                                   Instructions = ""} ps);
+        psr <- return (defaultPset ps);
+        psr' <- return (defaultPset ps');
 
         oldPsets <- queryX1 (SELECT pset.PsetNum
                              FROM pset
@@ -858,51 +895,11 @@ structure Private = struct
          (case ps of
               None => None
             | Some _ => Some "Current Pset",
-          Ui.seq (Ui.constM (fn ctx => <xml>
-            <h2>Pset {[psr.PsetNum]}</h2>
-            <h3>Released: {[psr.Released]}<br/>
-            Due: {[psr.Due]}</h3>
-            {Widget.html psr.Instructions}<br/>
-
-            {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>New Submission</xml>
-                            (PsetSub.newUpload {PsetNum = psr.PsetNum})}
-           
-            <hr/>
-
-            <h3>Solution</h3>
-          </xml>),
-          PsetSpec.AllFilesAllUsers.ui {PsetNum = psr.PsetNum},
-          Ui.const <xml>
-            <hr/>
-            <h2>Your Submissions</h2>
-          </xml>,
-          PsetSub.AllFiles.ui {Key = {PsetNum = psr.PsetNum}, User = u},
-          Ui.const <xml>
-            <hr/>
-            <h2>Forum</h2>
-          </xml>,
-          PsetForum.ui {PsetNum = psr.PsetNum})),
-         (Some "Pset Hints",
-          Ui.const <xml>
-            <table class="bs-table table-striped">
-              <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
-              {List.mapX (fn r => <xml><tr>
-                <td>{[r.PsetNum]}</td>
-                <td>{[r.Title]}</td>
-                <td>
-                  <dyn signal={exp <- signal r.Expanded;
-                               return (if exp then
-                                           Widget.html r.Text
-                                       else
-                                           <xml><button class="btn btn-primary"
-                                                        onclick={fn _ => set r.Expanded True}>
-                                             <span class="glyphicon glyphicon-chevron-down"/> Show
-                                           </button></xml>)}/>
-                </td>
-              </tr></xml>) hints}
-            </table>
-          </xml>),
-
+          psetUi psr u),
+         (case ps' of
+              None => None
+            | Some _ => Some "Current Pset [2]",
+          psetUi psr' u),
          (case lec of
               None => None
             | Some _ => Some "Last Lecture",
