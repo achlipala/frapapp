@@ -14,7 +14,7 @@ table user : { Kerberos : string, MitId : string, UserName : string, Password : 
 table possibleOfficeHoursTime : { Time : time }
   PRIMARY KEY Time
 
-table lecture : { LectureNum : int, LectureTitle : string, When : time, Description : string }
+table lecture : { LectureNum : int, LectureTitle : string, When : time, Description : string, VideoUrl : option string }
   PRIMARY KEY LectureNum,
   CONSTRAINT When UNIQUE When
 
@@ -370,7 +370,7 @@ structure Smu = Sm.MakeUi(struct
                           end)
 
 fun getLecture num =
-    oneRow1 (SELECT lecture.LectureTitle, lecture.Description, lecture.When
+    oneRow1 (SELECT lecture.LectureTitle, lecture.Description, lecture.When, lecture.VideoUrl
              FROM lecture
              WHERE lecture.LectureNum = {[num]})
 
@@ -385,6 +385,7 @@ structure LectureCal = Calendar.FromTable(struct
                                               val labels = {LectureNum = "Lecture#",
                                                             LectureTitle = "Title",
                                                             Description = "Description",
+                                                            VideoUrl = "Video URL",
                                                             When = "When"}
                                               val kinds = {When = ""}
                                               val ws = {Description = Widget.htmlbox} ++ _
@@ -395,10 +396,11 @@ structure LectureCal = Calendar.FromTable(struct
                                                                                       <xml>
                                                                                         <h2>Lecture #{[r.LectureNum]}: {[lec.LectureTitle]}</h2>
                                                                                         <h3>{[lec.When]}</h3>
+                                                                                        {case lec.VideoUrl of
+                                                                                             None => <xml></xml>
+                                                                                           | Some url => <xml><h3><a href={bless url}>Recorded video</a></h3></xml>}
                                                                       
                                                                                         {Widget.html lec.Description}
-
-                                                                                        
                                                                                       </xml>
                                                                                       <xml>Close</xml>);
                                                                      return <xml>
