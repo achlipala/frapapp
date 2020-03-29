@@ -370,9 +370,15 @@ structure Smu = Sm.MakeUi(struct
                           end)
 
 fun getLecture num =
-    oneRow1 (SELECT lecture.LectureTitle, lecture.Description, lecture.When, lecture.VideoUrl
-             FROM lecture
-             WHERE lecture.LectureNum = {[num]})
+    r <- oneRow1 (SELECT lecture.LectureTitle, lecture.Description, lecture.When, lecture.VideoUrl
+                  FROM lecture
+                  WHERE lecture.LectureNum = {[num]});
+    amStudent <- amStudent;
+    amStaff <- amStaff;
+    return (if amStudent || amStaff then
+                r
+            else
+                r -- #VideoUrl ++ {VideoUrl = None})
 
 val showLecture = mkShow (fn {LectureNum = n : int, LectureTitle = s} => "Lecture " ^ show n ^ ": " ^ s)
 
