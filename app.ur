@@ -250,7 +250,7 @@ val courseInfo =
         </div>
       </div>
 
-      <table class="bs-table table-striped">
+      <table class="bs-table">
         <tr> <th>Subject number:</th> <td>6.822</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
         <tr> <th>Teaching assistants:</th> <td><a href="http://andres.systems/">Andres Erbsen</a><br/><a href="https://samuelgruetter.net/">Sam Gruetter</a></td> </tr>
@@ -271,7 +271,7 @@ val courseInfo =
 
       <p>Here's a tentative syllabus.</p>
 
-      <table class="bs-table table-striped">
+      <table class="bs-table">
         <tr><th>Foundations</th></tr>
         <tr><td>Inductive types, recursive functions, induction, and rewriting: the heart of formal reasoning, and useful for defining and reasoning about language interpreters</td></tr>
         <tr><td>Data abstraction in the presence of formal proofs</td></tr>
@@ -301,7 +301,7 @@ val courseInfo =
 
       <p>That's quite a lot of topics, isn't it?  We'll be sticking to techniques for proving <i>safety properties</i> (and we'll clarify what that term means), so there's even a whole other world of foundational ideas for proving other sorts of program properties!  Nonetheless, a key goal of the course is to clarify how all of these techniques can be seen as applying a few <b>big ideas</b> of semantics and verification:</p>
 
-      <table class="bs-table table-striped">
+      <table class="bs-table">
         <tr><th>Encoding</th> <td>There are an awful lot of different ways to formalize the shape and behavior of programs, and the choice of a method can have big consequences for how easy the proofs are.</td></tr>
         <tr><th>Invariants</th> <td>Almost all program proofs come down to finding invariants of state machines.  That is, we prove that some property holds of all reachable states of a formal system, and we show that the property implies the one we started out trying to prove.</td></tr>
         <tr><th>Abstraction</th> <td>Often we replace one state machine with a simpler one that somehow represents it faithfully enough with respect to the property of interest.</td></tr>
@@ -910,22 +910,26 @@ structure Private = struct
           psetUi psr' u),
          (Some "Pset Hints",
           Ui.const <xml>
-            <table class="bs-table table-striped">
-              <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
-              {List.mapX (fn r => <xml><tr>
-                <td>{[r.PsetNum]}</td>
-                <td>{[r.Title]}</td>
-                <td>
-                  <dyn signal={exp <- signal r.Expanded;
-                               return (if exp then
-                                           Widget.html r.Text
-                                       else
-                                           <xml><button class="btn btn-primary"
-                                                        onclick={fn _ => set r.Expanded True}>
-                                             <span class="glyphicon glyphicon-chevron-down"/> Show
-                                           </button></xml>)}/>
-                </td>
-              </tr></xml>) hints}
+            <table class="bs-table">
+              <thead>
+                <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
+              </thead>
+              <tbody>
+                {List.mapX (fn r => <xml><tr>
+                  <td>{[r.PsetNum]}</td>
+                  <td>{[r.Title]}</td>
+                  <td>
+                    <dyn signal={exp <- signal r.Expanded;
+                                 return (if exp then
+                                             Widget.html r.Text
+                                         else
+                                             <xml><button class="btn btn-primary"
+                                                                    onclick={fn _ => set r.Expanded True}>
+<span class="glyphicon glyphicon-chevron-down"/> Show
+                                             </button></xml>)}/>
+                                             </td>
+                </tr></xml>) hints}
+              </tbody>
             </table>
           </xml>),
 
@@ -961,7 +965,7 @@ structure Private = struct
                   PsetGrade.Several.ui (WHERE T.PsetStudent = {[u]}))),
          (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
           Ui.const <xml>
-            <table class="bs-table table-striped">
+            <table class="bs-table">
               {oldPsets}
             </table>
           </xml>),
@@ -1193,9 +1197,13 @@ structure Private = struct
             in
                 <xml>
                   <table class="bs-table table-striped">
-                    <tr>{firstnX maxPset}</tr>
-                    {List.mapX (fn psets =>
-                                   <xml><tr>{oneStudent 1 maxPset psets}</tr></xml>) a}
+                    <thead>
+                      <tr>{firstnX maxPset}</tr>
+                    </thead>
+                    <tbody>
+                      {List.mapX (fn psets =>
+                                     <xml><tr>{oneStudent 1 maxPset psets}</tr></xml>) a}
+                    </tbody>
                   </table>
                 </xml>
             end
@@ -1441,7 +1449,7 @@ structure Private = struct
                        GlobalForum.ui),
                       (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Old Psets",
                        Ui.const <xml>
-                         <table class="bs-table table-striped">
+                         <table class="bs-table">
                            {oldPsets}
                          </table>
                        </xml>),
@@ -1468,7 +1476,7 @@ structure Private = struct
                          WHERE user.IsStudent
                          ORDER BY user.UserName)
                         (fn r => <xml>
-                          <tr><td><a link={student r.UserName}>{[r.UserName]}</a></td></tr>
+                          <li class="list-group-item"><a link={student r.UserName}>{[r.UserName]}</a></li>
                         </xml>);
 
         smasq <- queryX1 (SELECT user.UserName
@@ -1476,7 +1484,7 @@ structure Private = struct
                           WHERE user.IsTA
                           ORDER BY user.UserName)
                          (fn r => <xml>
-                           <tr><td><a link={staff r.UserName}>{[r.UserName]}</a></td></tr>
+                           <li class="list-group-item"><a link={staff r.UserName}>{[r.UserName]}</a></li>
                          </xml>);
 
         Theme.tabbed "MIT 6.822, Spring 2020 Admin"
@@ -1495,15 +1503,15 @@ structure Private = struct
                                EditPossOh.ui)),
                       (Some "Student Masquerade",
                        Ui.const <xml>
-                         <table class="bs-table table-striped">
+                         <ul class="list-group">
                            {masq}
-                         </table>
+                         </ul>
                        </xml>),
                       (Some "TA Masquerade",
                        Ui.const <xml>
-                         <table class="bs-table table-striped">
+                         <ul class="list-group">
                            {smasq}
-                         </table>
+                         </ul>
                        </xml>))
 
 end
