@@ -1098,19 +1098,19 @@ structure Private = struct
                                                     |> Todo.compose GradingTodo.todo
                                     end)
 
-    structure Grades = MitGrades.Make(struct
-                                          con groups = [IsInstructor, IsTA, HasDropped]
-                                          con others = [Kerberos = _, Password = _]
-                                          constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
-                                          val users = user
-                                          val grades = gradeTree
-                                          val access =
-                                              staff <- amStaff;
-                                              return (if staff then
-                                                          FinalGrades.Write
-                                                      else
-                                                          FinalGrades.Forbidden)
-                                      end)
+    structure Grades = MitAlternateGrades.Make(struct
+                                                   con groups = [IsInstructor, IsTA, HasDropped]
+                                                   con others = [Kerberos = _, Password = _]
+                                                   constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
+                                                   val users = user
+                                                   val grades = gradeTree
+                                                   val access =
+                                                       staff <- amStaff;
+                                                       return (if staff then
+                                                                   FinalGrades.Write
+                                                               else
+                                                                   FinalGrades.Forbidden)
+                                               end)
 
     structure TimeSpent = SimpleQuery.Make(struct
                                                val submission = PsetSub.submission
