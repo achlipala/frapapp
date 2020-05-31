@@ -1189,7 +1189,7 @@ structure Private = struct
                       <td></td>
                       {oneStudent (nextPset + 1) maxPset psets}
                     </xml>
-                      
+
         fun render _ a =
             let
                 val maxPset = List.foldl (fn psets highest =>
@@ -1208,14 +1208,17 @@ structure Private = struct
                 </xml>
             end
 
+        fun notification _ _ = <xml></xml>
+
         val ui = {Create = create,
                   Onload = onload,
-                  Render = render}
+                  Render = render,
+                  Notification = notification}
     end
-                          
+
     structure Suggestions = SimpleQuery1.Make(struct
                                                   val submission = PsetSub.submission
-                                                                   
+
                                                   val query = (SELECT submission.Suggestions, submission.PsetNum
                                                                FROM submission
                                                                  JOIN pset ON submission.PsetNum = pset.PsetNum
@@ -1251,9 +1254,12 @@ structure Private = struct
                               rpc (upload s)}/>
         </xml>
 
+        fun notification _ _ = <xml></xml>
+
         val ui = {Create = create,
                   Onload = onload,
-                  Render = render}
+                  Render = render,
+                  Notification = notification}
     end
 
     fun oldPsetStaff id =
@@ -1271,7 +1277,7 @@ structure Private = struct
 
                  {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>Upload File</xml>
                                  (PsetSpec.newUpload {PsetNum = id})}
-                 
+
                  <hr/>
              </xml>),
               PsetSpec.AllFilesAllUsers.ui {PsetNum = id}))
