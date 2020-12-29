@@ -524,7 +524,7 @@ fun emailOf kerb =
 fun toOf {UserName = name, Kerberos = kerb} =
     name ^ " <" ^ emailOf kerb ^ ">"
 
-val sendMail = Mail.send "smtp://localhost" False None "" ""
+val sendMail = Email.send "smtp://localhost" False None "" ""
 
 fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                  (describe : $key -> string)
@@ -551,10 +551,10 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                               FROM user
                               WHERE user.UserName = {[to]});
             let
-                val hs = Mail.empty
-                             |> Mail.from mailFrom
-                             |> Mail.to (toOf {UserName = to, Kerberos = kerb})
-                             |> Mail.subject "New forum message"
+                val hs = Email.empty
+                             |> Email.from mailFrom
+                             |> Email.to (toOf {UserName = to, Kerberos = kerb})
+                             |> Email.subject "New forum message"
 
                 val textm = "Let it be known that there is a new MIT 6.822 "
                             ^ describe (r --- _)
@@ -637,10 +637,10 @@ structure Ann = News.Make(struct
                                   let
                                       val sendOne = fn to =>
                                           let
-                                              val hs = Mail.empty
-                                                           |> Mail.from mailFrom
-                                                           |> Mail.to to
-                                                           |> Mail.subject ("Announcement: " ^ r.Title)
+                                              val hs = Email.empty
+                                                           |> Email.from mailFrom
+                                                           |> Email.to to
+                                                           |> Email.subject ("Announcement: " ^ r.Title)
 
                                               val textm = Html.unhtml r.Body
 
@@ -695,6 +695,7 @@ structure Private = struct
                                                 fun onAdd _ = return ()
                                                 fun onDelete _ = return ()
                                                 fun onModify _ = return ()
+                                                val title = "user"
                                             end)
 
     structure EditExtension = EditableTable.Make(struct
@@ -711,6 +712,7 @@ structure Private = struct
                                                      fun onAdd _ = return ()
                                                      fun onDelete _ = return ()
                                                      fun onModify _ = return ()
+                                                     val title = "extension"
                                                  end)
 
     structure EditHint = EditableTable.Make(struct
@@ -729,6 +731,7 @@ structure Private = struct
                                                 fun onAdd _ = return ()
                                                 fun onDelete _ = return ()
                                                 fun onModify _ = return ()
+                                                val title = "hint"
                                             end)
 
     structure EditPossOh = EditableTable.Make(struct
@@ -739,6 +742,7 @@ structure Private = struct
                                                   fun onAdd _ = return ()
                                                   fun onDelete _ = return ()
                                                   fun onModify _ = return ()
+                                                  val title = "possibleOfficeHoursTime"
                                               end)
 
     structure OhPoll = ClosedBallot.Make(struct
@@ -1209,11 +1213,13 @@ structure Private = struct
             end
 
         fun notification _ _ = <xml></xml>
+        fun buttons _ _ = <xml></xml>
 
         val ui = {Create = create,
                   Onload = onload,
                   Render = render,
-                  Notification = notification}
+                  Notification = notification,
+                  Buttons = buttons}
     end
 
     structure Suggestions = SimpleQuery1.Make(struct
@@ -1255,11 +1261,13 @@ structure Private = struct
         </xml>
 
         fun notification _ _ = <xml></xml>
+        fun buttons _ _ = <xml></xml>
 
         val ui = {Create = create,
                   Onload = onload,
                   Render = render,
-                  Notification = notification}
+                  Notification = notification,
+                  Buttons = buttons}
     end
 
     fun oldPsetStaff id =

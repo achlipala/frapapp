@@ -1,5 +1,5 @@
 library style
-library $/mail
+library $/email
 rewrite relation App/*
 rewrite url App/*
 rewrite style App/*
