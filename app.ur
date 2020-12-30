@@ -1,6 +1,6 @@
 open Bootstrap4
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2020
+structure ThisTerm = Spring2021
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 val mailFrom = "MIT 6.822 <frap@csail.mit.edu>"
@@ -246,18 +246,18 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2020</p>
+          <p>A graduate course at MIT in Spring 2021</p>
         </div>
       </div>
 
       <table class="bs-table">
         <tr> <th>Subject number:</th> <td>6.822</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistants:</th> <td><a href="http://andres.systems/">Andres Erbsen</a><br/><a href="https://samuelgruetter.net/">Sam Gruetter</a></td> </tr>
-        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 2-105</td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="http://pit-claudel.fr/clement/">Cl&eacute;ment Pit-Claudel</a></td> </tr>
+        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, virtually</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring20">GitHub repo with problem sets</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring21">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
@@ -265,7 +265,7 @@ val courseInfo =
 
       <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 3rd.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 17th (even later than usual for MIT, thanks to the interesting times we live in!).</p>
 
       <h2>Major topics covered</h2>
 
@@ -310,13 +310,15 @@ val courseInfo =
 
       <h2>Mechanics</h2>
 
+      <p>Lectures will be delivered synchronously with video-conferencing software, details to be distributed to registered students shortly before the first meeting.  If you plan to participate unofficially and thus won't be on that list from MIT's registrar, please <a href="mailto:adamc@csail.mit.edu">e-mail the instructor</a> to request to be included.</p>
+
       <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
 
-      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.</p>
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  Coq examples will be explored through livecoding with as much audience participation as possible.  We expect that questions and suggestions from the audience will come via text chat, while the instructor is screensharing an IDE session.</p>
 
       <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)</p>
 
-      <p>It takes a while to internalize all the pro tips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i>, in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
+      <p>It takes a while to internalize all the pro tips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>online office hours</i> (based on some kind of queue system connecting students to video-chat sessions with staff), in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
       <p><b>Academic-integrity guidelines:</b> Learning to drive a proof assistant is hard work, and it's valuable to be able to ask for help from your classmates.  For that reason, we allow asking for help from classmates, not just the course staff, with no particular acknowledgment in turned-in solutions.  However, the requirement is that <i>you have entered your problem-set code/proofs yourself, without someone else looking over your shoulder telling you more or less what to type at every stage</i>.  Use your judgment about exactly which interaction styles will stay compatible with this rule.  You'll generally learn more as you spend time working through the parts of assignments where you don't wind up stuck on something, and it's generally valuable to seek help (from classmates or course staff) when you're stuck.</p>
 
@@ -405,7 +407,7 @@ structure LectureCal = Calendar.FromTable(struct
                                                                                         {case lec.VideoUrl of
                                                                                              None => <xml></xml>
                                                                                            | Some url => <xml><h3><a href={bless url}>Recorded video</a></h3></xml>}
-                                                                      
+
                                                                                         {Widget.html lec.Description}
                                                                                       </xml>
                                                                                       <xml>Close</xml>);
@@ -443,7 +445,7 @@ structure PsetCal = Calendar.FromTable(struct
                                                                                      <h2>Pset #{[r.PsetNum]}</h2>
                                                                                      <h3>Released {[lb.Released]}<br/>
                                                                                      Due {[lb.Due]}</h3>
-                                                                                     
+
                                                                                      <button class="btn btn-primary"
                                                                                               onclick={fn _ =>
                                                                                                           xm <- PsetSub.newUpload r;
@@ -498,10 +500,8 @@ structure PublicCal = Calendar.Make(struct
                                     end)
 
 val calUi = Ui.seq (Ui.h4 <xml>
-  Lecture is in 2-105.<br/>
-  Monday and Wednesday office hours are in 34-302.<br/>
-  Tuesday office hours are in 34-304.<br/>
-  Friday office hours are in 26-328.
+  Lecture is virtual; <a href="mailto:adamc@csail.mit.edu">e-mail the instructor</a> if you haven't been sent connection information.<br/>
+  Office hours are also virtual, at a URL TBD.
 </xml>, PublicCal.ui calBounds)
 
 val forumAccess = staff <- amStaff;
@@ -794,7 +794,7 @@ structure Private = struct
 
               {Ui.modalButton ctx (CLASS "btn btn-primary") <xml>New Submission</xml>
                               (PsetSub.newUpload {PsetNum = id})}
-              
+
               <hr/>
 
               <h3>Solution</h3>
@@ -893,7 +893,7 @@ structure Private = struct
                                     expanded <- source False;
                                     return (r.Hint ++ {Expanded = expanded}));
 
-        Theme.tabbed "MIT 6.822, Spring 2020, student page"
+        Theme.tabbed "MIT 6.822, Spring 2021, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
@@ -944,7 +944,7 @@ structure Private = struct
             <h2>Lecture {[lecr.LectureNum]}: {[lecr.LectureTitle]}</h2>
             <h3>{[lecr.When]}</h3>
             {Widget.html lecr.Description}
-            
+
             <hr/>
           </xml>,
           LectureSub.AllFilesAllUsers.ui {LectureNum = lecr.LectureNum},
@@ -997,7 +997,7 @@ structure Private = struct
                                                                                          <h2>Pset #{[r.PsetNum]}</h2>
                                                                                          <h3>Released {[lb.Released]}<br/>
                                                                                          Due {[lb.Due]}</h3>
-                                                                                         
+
                                                                                          {Widget.html lb.Instructions}
                                                                                        </xml>
                                                                                        <xml>Close</xml>);
@@ -1102,19 +1102,19 @@ structure Private = struct
                                                     |> Todo.compose GradingTodo.todo
                                     end)
 
-    structure Grades = MitAlternateGrades.Make(struct
-                                                   con groups = [IsInstructor, IsTA, HasDropped]
-                                                   con others = [Kerberos = _, Password = _]
-                                                   constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
-                                                   val users = user
-                                                   val grades = gradeTree
-                                                   val access =
-                                                       staff <- amStaff;
-                                                       return (if staff then
-                                                                   FinalGrades.Write
-                                                               else
-                                                                   FinalGrades.Forbidden)
-                                               end)
+    structure Grades = MitGrades.Make(struct
+                                          con groups = [IsInstructor, IsTA, HasDropped]
+                                          con others = [Kerberos = _, Password = _]
+                                          constraint [MitId, UserName, IsStudent, IsListener, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial, Grade, Min, Max] ~ (mapU bool groups ++ others)
+                                          val users = user
+                                          val grades = gradeTree
+                                          val access =
+                                              staff <- amStaff;
+                                              return (if staff then
+                                                          FinalGrades.Write
+                                                      else
+                                                          FinalGrades.Forbidden)
+                                      end)
 
     structure TimeSpent = SimpleQuery.Make(struct
                                                val submission = PsetSub.submission
@@ -1360,7 +1360,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2020 Staff"
+        Theme.tabbed "MIT 6.822, Spring 2021 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1501,7 +1501,7 @@ structure Private = struct
                            <li class="list-group-item"><a link={staff r.UserName}>{[r.UserName]}</a></li>
                          </xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2020 Admin"
+        Theme.tabbed "MIT 6.822, Spring 2021 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1533,7 +1533,7 @@ end
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.822, Spring 2020"
+    Theme.tabbed "MIT 6.822, Spring 2021"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
