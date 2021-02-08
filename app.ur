@@ -259,6 +259,8 @@ val courseInfo =
 
       <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring21">GitHub repo with problem sets</a></h3>
 
+      <h4>Students enrolled formally in class (including listeners) will be granted access to a part of this web site that includes information for joining Zoom lectures; e-mail instructions will follow the weekend before class begins. People who want to participate without being enrolled formally should <a href="mailto:adamc@csail.mit.edu">contact the instructor</a>.</h4>
+
       <h2>What's it all about?</h2>
 
       <p><i>Briefly</i>, this course is about an approach to bringing software engineering up to speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
