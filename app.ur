@@ -34,6 +34,8 @@ table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
 
+table secrets : { LectureUrl : string }
+
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
   anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
@@ -501,11 +503,6 @@ structure PublicCal = Calendar.Make(struct
                                                     |> Calendar.compose LectureCal.cal
                                     end)
 
-val calUi = Ui.seq (Ui.h4 <xml>
-  Lecture is virtual; <a href="mailto:adamc@csail.mit.edu">e-mail the instructor</a> if you haven't been sent connection information.<br/>
-  Office hours are also virtual, at a URL TBD.
-</xml>, PublicCal.ui calBounds)
-
 val forumAccess = staff <- amStaff;
     if staff then
         u <- Auth.getUserWithMasquerade;
@@ -674,6 +671,17 @@ structure Private = struct
     val staffPerm =
         b <- amStaff;
         return {Add = b, Delete = b, Modify = b}
+
+    structure EditSecrets = EditableTable.Make(struct
+                                                   val tab = secrets
+                                                   val labels = {LectureUrl = "Lecture URL"}
+
+                                                   val permission = adminPerm
+                                                   fun onAdd _ = return ()
+                                                   fun onDelete _ = return ()
+                                                   fun onModify _ = return ()
+                                                   val title = "secrets"
+                                               end)
 
     structure EditUser = EditableTable.Make(struct
                                                 val tab = user
@@ -895,6 +903,10 @@ structure Private = struct
                                     expanded <- source False;
                                     return (r.Hint ++ {Expanded = expanded}));
 
+        secrets <- oneOrNoRows1 (SELECT *
+                                 FROM secrets
+                                 LIMIT 1);
+
         Theme.tabbed "MIT 6.822, Spring 2021, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
@@ -902,7 +914,11 @@ structure Private = struct
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-          calUi),
+          Ui.seq (Ui.h4 (case secrets of
+                             None => <xml></xml>
+                           | Some r => <xml>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.  Please don't share the link outside of class.  All lectures will be recorded, with video links added to this calendar as they are available.</xml>),
+                  Ui.h4 <xml>Logistics of office hours to be determined.</xml>,
+                  PublicCal.ui calBounds)),
          (Some "News",
           Ann.ui),
 
@@ -1362,6 +1378,10 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
+        secrets <- oneOrNoRows1 (SELECT *
+                                 FROM secrets
+                                 LIMIT 1);
+
         Theme.tabbed "MIT 6.822, Spring 2021 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
@@ -1373,7 +1393,10 @@ structure Private = struct
                       (Some "Upload Grades",
                        UploadGrades.ui),
                       (Some "Calendar",
-                       AdminCal.ui calBounds),
+                       Ui.seq (Ui.h4 (case secrets of
+                                          None => <xml></xml>
+                                        | Some r => <xml>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.</xml>),
+                               AdminCal.ui calBounds)),
                       (Some "News",
                        Ann.ui),
                       (Some "Hints",
@@ -1410,7 +1433,7 @@ structure Private = struct
                        </xml>),
                                PsetSpec.AllFilesAllUsers.ui {PsetNum = npsr.PsetNum})),
 
-                      (case ps of   
+                      (case ps of
                            None => None
                          | Some _ => Some "Current Pset",
                        Ui.seq (Ui.constM (fn ctx => <xml>
@@ -1528,7 +1551,9 @@ structure Private = struct
                          <ul class="list-group">
                            {smasq}
                          </ul>
-                       </xml>))
+                       </xml>),
+                      (Some "Secrets",
+                       EditSecrets.ui))
 
 end
 
@@ -1546,7 +1571,9 @@ val main =
                                          </p></xml>),
                            courseInfo)),
                   (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-                   calUi))
+                   (Ui.seq
+                        (Ui.h4 <xml>URLs to participate are distributed to registered students only.  <a href="mailto:adamc@csail.mit.edu">Contact the instructor</a> if you are participating and have somehow been left off the distribution list.</xml>,
+                         PublicCal.ui calBounds))))
 
 val login =
     Theme.simple "MIT 6.822, non-MIT user login" Auth.Login.ui
