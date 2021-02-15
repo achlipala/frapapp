@@ -34,7 +34,7 @@ table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
 
-table secrets : { LectureUrl : string }
+table secrets : { LectureUrl : string, OfficeHoursUrl : string, VideoPassword : string }
 
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
@@ -314,13 +314,13 @@ val courseInfo =
 
       <h2>Mechanics</h2>
 
-      <p>Lectures will be delivered synchronously with video-conferencing software, details to be distributed to registered students shortly before the first meeting.  If you plan to participate unofficially and thus won't be on that list from MIT's registrar, please <a href="mailto:adamc@csail.mit.edu">e-mail the instructor</a> to request to be included.</p>
+      <p>Lectures will be delivered synchronously with video-conferencing software, details to be distributed to registered students shortly before the first meeting.  If you plan to participate unofficially and thus won't be on that list from MIT's registrar, please <a href="mailto:adamc@csail.mit.edu">e-mail the instructor</a> to request to be included.  No synchronous participation is mandatory, and all lectures will be recorded and made available to participants later.  Students who choose to join lectures synchronously will be encouraged to participate live by text chat but not audio or video.</p>
 
       <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
 
       <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  Coq examples will be explored through livecoding with as much audience participation as possible.  We expect that questions and suggestions from the audience will come via text chat, while the instructor is screensharing an IDE session.</p>
 
-      <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)</p>
+      <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late, starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)  At the end of term, letter-grade cutoffs will be determined (per <a href="https://facultygovernance.mit.edu/rules-and-regulations#2-60-grades">MIT rules</a>) by analyzing how hard the assignments turned out to be, but the cutoffs won't be any less favorable than 90% for A, 80% for B, 70% for C, 60% for D.</p>
 
       <p>It takes a while to internalize all the pro tips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>online office hours</i> (based on some kind of queue system connecting students to video-chat sessions with staff), in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
@@ -674,7 +674,9 @@ structure Private = struct
 
     structure EditSecrets = EditableTable.Make(struct
                                                    val tab = secrets
-                                                   val labels = {LectureUrl = "Lecture URL"}
+                                                   val labels = {LectureUrl = "Lecture URL",
+                                                                 OfficeHoursUrl = "Office-Hours URL",
+                                                                 VideoPassword = "Video Password"}
 
                                                    val permission = adminPerm
                                                    fun onAdd _ = return ()
@@ -914,10 +916,14 @@ structure Private = struct
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-          Ui.seq (Ui.h4 (case secrets of
-                             None => <xml></xml>
-                           | Some r => <xml>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.  Please don't share the link outside of class.  All lectures will be recorded, with video links added to this calendar as they are available.</xml>),
-                  Ui.h4 <xml>Logistics of office hours to be determined.</xml>,
+          Ui.seq (Ui.const (case secrets of
+                                None => <xml></xml>
+                              | Some r => <xml>
+                                <h5>We will be using a number of resources that should be kept private to class participants, so please don't share the following links more broadly.</h5>
+                                <h5>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.</h5>
+                                <h5>All lectures will be recorded, with video links added to this calendar as they are available, protected with a password that will appear here.</h5>
+                                <h5>We will also be hosting virtual office hours using <a href={bless r.OfficeHoursUrl}>a meeting on the cool platform Comingle</a>.</h5>
+                              </xml>),
                   PublicCal.ui calBounds)),
          (Some "News",
           Ann.ui),
