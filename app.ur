@@ -553,7 +553,7 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                 val hs = Email.empty
                              |> Email.from mailFrom
                              |> Email.to (toOf {UserName = to, Kerberos = kerb})
-                             |> Email.subject "New forum message"
+                             |> Email.subject ("New forum message (" ^ r.Subject ^ ")")
 
                 val textm = "Let it be known that there is a new MIT 6.822 "
                             ^ describe (r --- _)
