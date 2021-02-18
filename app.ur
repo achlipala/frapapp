@@ -923,6 +923,7 @@ structure Private = struct
                                 <h5>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.</h5>
                                 <h5>All lectures will be recorded, with video links added to this calendar as they are available, protected with the following password: <tt>{[r.VideoPassword]}</tt></h5>
                                 <h5>We will also be hosting virtual office hours using <a href={bless r.OfficeHoursUrl}>a meeting on the cool platform Comingle</a>.</h5>
+                                <h5>Finally, consider using the MIT-level service <a href="https://psetpartners.mit.edu/">Pset Partners</a> to find classmates to collaborate with on the assignments.</h5>
                               </xml>),
                   PublicCal.ui calBounds)),
          (Some "News",
