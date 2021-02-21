@@ -69,3 +69,11 @@ sudo python -m smtpd -n -c DebuggingServer localhost:25
 ## Info on keeping the server's clock up to date
 
 Install package `ntp` and copy over `/etc/ntp.conf` from a CSAIL Ubuntu workstation.
+
+### On CA certificate strength
+
+Apparently MIT's CA uses weaker crypto than Ubuntu 20.04 enforced by default.
+Tweak the setting in `/etc/apache2/mods-available/ssl.conf` like so:
+```
+SSLCipherSuite DEFAULT@SECLEVEL=1
+```
