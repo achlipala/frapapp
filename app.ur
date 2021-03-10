@@ -34,7 +34,7 @@ table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
 
-table secrets : { LectureUrl : string, OfficeHoursUrl : string, VideoPassword : string }
+table secrets : { LectureUrl : string, OfficeHoursUrl : string, VideoPassword : string, DebriefingsUrl : string }
 
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
@@ -676,7 +676,8 @@ structure Private = struct
                                                    val tab = secrets
                                                    val labels = {LectureUrl = "Lecture URL",
                                                                  OfficeHoursUrl = "Office-Hours URL",
-                                                                 VideoPassword = "Video Password"}
+                                                                 VideoPassword = "Video Password",
+                                                                 DebriefingsUrl = "Debriefings URL"}
 
                                                    val permission = adminPerm
                                                    fun onAdd _ = return ()
@@ -922,7 +923,7 @@ structure Private = struct
                                 <h5>We will be using a number of resources that should be kept private to class participants, so please don't share the following links more broadly.</h5>
                                 <h5>Lecture is in <a href={bless r.LectureUrl}>a private Zoom meeting</a>.</h5>
                                 <h5>All lectures will be recorded, with video links added to this calendar as they are available, protected with the following password: <tt>{[r.VideoPassword]}</tt></h5>
-                                <h5><a href="https://people.csail.mit.edu/cpitcla/6.822/">Homework debriefings</a> are available.</h5>
+                                <h5><a href={bless r.DebriefingsUrl}>Homework debriefings</a> are available.</h5>
                                 <h5>We will also be hosting virtual office hours using <a href={bless r.OfficeHoursUrl}>a meeting on the cool platform Comingle</a>.</h5>
                                 <h5>Finally, consider using the MIT-level service <a href="https://psetpartners.mit.edu/">Pset Partners</a> to find classmates to collaborate with on the assignments.</h5>
                               </xml>),
