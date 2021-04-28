@@ -4,7 +4,7 @@ allow url https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.mi
 script https://code.jquery.com/jquery-3.4.1.slim.min.js
 script https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js
 script https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js
-script https://cdn.ckeditor.com/4.13.1/standard/ckeditor.js
+script https://cdn.jsdelivr.net/npm/ckeditor4@4.13.1/ckeditor.js
 file /style.css style.css
 allow url https://www.eecs.mit.edu/sites/all/themes/adaptivetheme/miteecs_adaptive_production/favicon.ico
 library $/upo/navbar
