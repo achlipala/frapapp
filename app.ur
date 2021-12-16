@@ -1,4 +1,4 @@
-open Bootstrap4
+open Bootstrap
 structure Theme = Ui.Make(Style)
 structure ThisTerm = Spring2021
 val calBounds = {FromDay = ThisTerm.regDay,
