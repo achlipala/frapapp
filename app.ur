@@ -26,10 +26,6 @@ table extension : { PsetNum : int, UserName : string, Until : time }
   CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE,
   CONSTRAINT UserName FOREIGN KEY UserName REFERENCES user(UserName) ON UPDATE CASCADE
 
-table hint : { PsetNum : int, Title : string, Text : string, ReleaseAt : time }
-  PRIMARY KEY (PsetNum, Title),
-  CONSTRAINT PsetNum FOREIGN KEY PsetNum REFERENCES pset(PsetNum) ON UPDATE CASCADE
-
 table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
@@ -700,25 +696,6 @@ structure Private = struct
                                                      val title = "extension"
                                                  end)
 
-    structure EditHint = EditableTable.Make(struct
-                                                val tab = hint
-                                                val labels = {PsetNum = "Pset#",
-                                                              ReleaseAt = "Release at",
-                                                              Title = "Title",
-                                                              Text = "Text"}
-
-                                                val widgets = {PsetNum = Widget.foreignbox_default (SELECT (pset.PsetNum) FROM pset ORDER BY pset.PsetNum) 0,
-                                                               ReleaseAt = _,
-                                                               Title = _,
-                                                               Text = Widget.htmlbox}
-
-                                                val permission = staffPerm
-                                                fun onAdd _ = return ()
-                                                fun onDelete _ = return ()
-                                                fun onModify _ = return ()
-                                                val title = "hint"
-                                            end)
-
     structure EditPossOh = EditableTable.Make(struct
                                                   val tab = possibleOfficeHoursTime
                                                   val labels = {Time = "Time"}
@@ -864,14 +841,6 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        hints <- List.mapQueryM (SELECT hint.PsetNum, hint.Title, hint.Text
-                                 FROM hint
-                                 WHERE hint.ReleaseAt < CURRENT_TIMESTAMP
-                                 ORDER BY hint.ReleaseAt DESC)
-                                (fn r =>
-                                    expanded <- source False;
-                                    return (r.Hint ++ {Expanded = expanded}));
-
         Theme.tabbed "MIT 6.822, Spring 2022, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
@@ -887,30 +856,6 @@ structure Private = struct
               None => None
             | Some _ => Some "Current Pset",
           psetUi psr u),
-         (Some "Pset Hints",
-          Ui.const <xml>
-            <table class="bs-table">
-              <thead>
-                <tr> <th>Pset#</th> <th>Title</th> <th>Hint</th> </tr>
-              </thead>
-              <tbody>
-                {List.mapX (fn r => <xml><tr>
-                  <td>{[r.PsetNum]}</td>
-                  <td>{[r.Title]}</td>
-                  <td>
-                    <dyn signal={exp <- signal r.Expanded;
-                                 return (if exp then
-                                             Widget.html r.Text
-                                         else
-                                             <xml><button class="btn btn-primary"
-                                                                    onclick={fn _ => set r.Expanded True}>
-<span class="glyphicon glyphicon-chevron-down"/> Show
-                                             </button></xml>)}/>
-                                             </td>
-                </tr></xml>) hints}
-              </tbody>
-            </table>
-          </xml>),
 
          (case lec of
               None => None
@@ -1349,8 +1294,6 @@ structure Private = struct
                        AdminCal.ui calBounds),
                       (Some "News",
                        Ann.ui),
-                      (Some "Hints",
-                       EditHint.ui),
 
                       (case nlec of
                            None => None
