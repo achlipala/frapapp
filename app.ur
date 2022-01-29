@@ -1465,7 +1465,10 @@ val main =
                            courseInfo)),
                   (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
                    (Ui.seq
-                        (Ui.h4 <xml>URLs to participate are distributed to registered students only.  <a href="mailto:adamc@csail.mit.edu">Contact the instructor</a> if you are participating and have somehow been left off the distribution list.</xml>,
+                        (Ui.h4 <xml>
+                          Lecture is in <b>2-105</b>.<br/>
+                          Locations of office hours to be determined.
+                        </xml>,
                          PublicCal.ui calBounds))))
 
 val login =
