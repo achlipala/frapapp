@@ -306,9 +306,9 @@ val courseInfo =
 
       <h2>Mechanics</h2>
 
-      <p><b>Lectures will be back to fully in-person!</b>  Sorry, there will be no recording or facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)</p>
+      <p><b>Lectures will be back to fully in-person!</b>  Sorry, there will be no facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)</p>
 
-      <p>Most homework assignments are mechanized proofs that are checked automatically.  Once a month, though, we'll have an assignment that also involves choosing the right theorems to prove in the first place, which usually involves defining some program reasoning system for a domain that we describe in a handout.</p>
+      <p>Most homework assignments are mechanized proofs that are checked automatically.</p>
 
       <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  Coq examples will be explored through livecoding with as much audience participation as possible.</p>
 
