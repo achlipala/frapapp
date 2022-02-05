@@ -306,7 +306,7 @@ val courseInfo =
 
       <h2>Mechanics</h2>
 
-      <p><b>Lectures will be back to fully in-person!</b>  Sorry, there will be no facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)</p>
+      <p><b>Lectures will be back to fully in-person!</b>  Sorry, there will be no facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)  We are using MIT's experimental lecture-capture system to save video of lectures, but these will only be shared with students with specific compelling reasons for missing class (the principal one being staying at home in isolation after positive COVID tests).  We still want to encourage everyone in class to attend lecture and participate actively!</p>
 
       <p>Most homework assignments are mechanized proofs that are checked automatically.</p>
 
