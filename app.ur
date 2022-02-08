@@ -646,6 +646,13 @@ structure Ann = News.Make(struct
                                   end
                           end)
 
+val cal = Ui.seq
+              (Ui.h4 <xml>
+                Lecture is in <b>2-105</b>.<br/>
+                Office hours are in <b>24-319</b> (M 11-1), <b>34-304</b> (M 4-6), and <b>36-112</b> (Th 4-6), with more to come.
+              </xml>,
+              PublicCal.ui calBounds)
+
 structure Private = struct
 
     val adminPerm =
@@ -850,7 +857,7 @@ structure Private = struct
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-          PublicCal.ui calBounds),
+          cal),
          (Some "News",
           Ann.ui),
 
@@ -1464,12 +1471,7 @@ val main =
                                          </p></xml>),
                            courseInfo)),
                   (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-                   (Ui.seq
-                        (Ui.h4 <xml>
-                          Lecture is in <b>2-105</b>.<br/>
-                          Locations of office hours to be determined.
-                        </xml>,
-                         PublicCal.ui calBounds))))
+                   cal))
 
 val login =
     Theme.simple "MIT 6.822, non-MIT user login" Auth.Login.ui
