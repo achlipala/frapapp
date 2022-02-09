@@ -649,7 +649,7 @@ structure Ann = News.Make(struct
 val cal = Ui.seq
               (Ui.h4 <xml>
                 Lecture is in <b>2-105</b>.<br/>
-                Office hours are in <b>24-319</b> (M 11-1), <b>34-304</b> (M 4-6), and <b>36-112</b> (Th 4-6), with more to come.
+                Office hours are in <b>24-319</b> (M 11-1), <b>34-304</b> (M 4-6), <b>8-205</b> (Tu 4-6), <b>36-112</b> (Th 4-6), and <b>36-144</b> (11-12).
               </xml>,
               PublicCal.ui calBounds)
 
