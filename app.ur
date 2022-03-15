@@ -30,6 +30,8 @@ table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
 
+table secrets : { RecitationsPassword : string }
+
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
   anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
@@ -663,6 +665,17 @@ structure Private = struct
         b <- amStaff;
         return {Add = b, Delete = b, Modify = b}
 
+    structure EditSecrets = EditableTable.Make(struct
+                                                   val tab = secrets
+                                                   val labels = {RecitationsPassword = "Recitations Password"}
+
+                                                   val permission = adminPerm
+                                                   fun onAdd _ = return ()
+                                                   fun onDelete _ = return ()
+                                                   fun onModify _ = return ()
+                                                   val title = "secrets"
+                                               end)
+
     structure EditUser = EditableTable.Make(struct
                                                 val tab = user
                                                 val labels = {Kerberos = "Kerberos",
@@ -850,6 +863,10 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
+        secrets <- oneOrNoRows1 (SELECT *
+                                 FROM secrets
+                                 LIMIT 1);
+
         Theme.tabbed "MIT 6.822, Spring 2022, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
@@ -857,7 +874,10 @@ structure Private = struct
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-          cal),
+          Ui.seq (Ui.const (case secrets of
+                                None => <xml></xml>
+                              | Some r => <xml><h5>The password for recitation videos is: <tt>{[r.RecitationsPassword]}</tt></h5></xml>),
+                  cal)),
          (Some "News",
           Ann.ui),
 
@@ -1453,7 +1473,9 @@ structure Private = struct
                          <ul class="list-group">
                            {smasq}
                          </ul>
-                       </xml>))
+                       </xml>),
+                      (Some "Secrets",
+                       EditSecrets.ui))
 
 end
 
