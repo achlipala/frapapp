@@ -876,7 +876,7 @@ structure Private = struct
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
           Ui.seq (Ui.const (case secrets of
                                 None => <xml></xml>
-                              | Some r => <xml><h5>The password for recitation videos is: <tt>{[r.RecitationsPassword]}</tt></h5></xml>),
+                              | Some r => <xml><h5>The password for <a href="http://people.csail.mit.edu/lamanda/recitations">recitation videos</a> is: <tt>{[r.RecitationsPassword]}</tt></h5></xml>),
                   cal)),
          (Some "News",
           Ann.ui),
