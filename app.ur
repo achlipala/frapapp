@@ -1,9 +1,9 @@
 open Bootstrap
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2022
+structure ThisTerm = Spring2023
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
-val mailFrom = "MIT 6.822 <frap@csail.mit.edu>"
+val mailFrom = "MIT 6.512 <frap@csail.mit.edu>"
 
 table user : { Kerberos : string, MitId : string, UserName : string, Password : option string,
                IsInstructor : bool, IsTA : bool, IsStudent : bool, IsListener : bool, HasDropped : bool,
@@ -244,26 +244,28 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2022</p>
+          <p>A graduate course at MIT in Spring 2023</p>
         </div>
       </div>
 
       <table class="bs-table">
-        <tr> <th>Subject number:</th> <td>6.822</td> </tr>
+        <tr> <th>Subject number:</th> <td>6.512*</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistant:</th> <td><a href="https://github.com/al3623">Amanda Liu</a></td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="https://jamner.net/">Dustin Jamner</a></td> </tr>
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 2-105</td> </tr>
       </table>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring22">GitHub repo with problem sets</a></h3>
+      <p>* Our department at MIT is in the midst of a <a href="https://www.eecs.mit.edu/academics/subject-numbering/">global subject renumbering</a>, so the <i>official</i> number is 6.5120, ending in a zero that will be removed in a few years.</p>
+
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring23">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
-      <p><i>Briefly</i>, this course is about an approach to bringing software engineering up to speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
+      <p><i>Briefly</i>, this course is about an approach to bringing software engineering up-to-speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
 
       <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on January 31st.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 6th.</p>
 
       <h2>Major topics covered</h2>
 
@@ -277,7 +279,7 @@ val courseInfo =
         <tr><td>Model checking and abstraction: finitizing state spaces with clever relations</td></tr>
         <tr><td>Operational semantics: the standard approach to give meanings to programs</td></tr>
         <tr><td>Compiler verification</td></tr>
-        <tr><td>Abstract interpretation</td></tr>
+        <!--tr><td>Abstract interpretation</td></tr-->
 
         <tr><th>Type Systems</th></tr>
         <tr><td>Lambda-calculus semantics</td></tr>
@@ -324,7 +326,7 @@ val courseInfo =
 
       <h2>Prerequisites</h2>
 
-      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.042 and 6.031 should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Coq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.820 also provides lightning-speed introductions to those languages.)</p>
+      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.120 (formerly 6.042) and 6.102 (formerly 6.031) should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Coq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.511 [formerly 6.820] also provides lightning-speed introductions to those languages.)</p>
 
       <h2>Suggested reading</h2>
 
@@ -541,7 +543,7 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                              |> Email.to (toOf {UserName = to, Kerberos = kerb})
                              |> Email.subject ("New forum message (" ^ r.Subject ^ ")")
 
-                val textm = "Let it be known that there is a new MIT 6.822 "
+                val textm = "Let it be known that there is a new MIT 6.512 "
                             ^ describe (r --- _)
                             ^ " forum message posted by "
                             ^ r.Who
@@ -551,7 +553,7 @@ fun onNewMessage [key] [key ~ [Thread, Subject, Who, Text]]
                             ^ Html.unhtml r.Text
 
                 val htmlm = <xml>
-                  <p>Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.822</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>. It reads:</p>
+                  <p>Let it be known that there is a new <a href="https://frap.csail.mit.edu/Private/student">MIT 6.512</a> {[describe (r --- _)]} forum message posted by <i>{[r.Who]}</i> in the thread <i>{[r.Subject]}</i>. It reads:</p>
                   <p>{Widget.html r.Text}</p>
                 </xml>
             in
@@ -632,7 +634,7 @@ structure Ann = News.Make(struct
                                               val htmlm = <xml>
                                                 {Widget.html r.Body}
 
-                                                <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.822 site</a></p>
+                                                <p><a href="https://frap.csail.mit.edu/Private/student">MIT 6.512 site</a></p>
                                               </xml>
                                           in
                                               sendMail hs textm (Some htmlm)
@@ -651,7 +653,7 @@ structure Ann = News.Make(struct
 val cal = Ui.seq
               (Ui.h4 <xml>
                 Lecture is in <b>2-105</b>.<br/>
-                Office hours are in <b>24-319</b> (M 11-1), <b>34-304</b> (M 4-6), <b>8-205</b> (Tu 4-6), <b>36-112</b> (Th 4-6), and <b>36-144</b> (11-12).
+                Office hours TBD.
               </xml>,
               PublicCal.ui calBounds)
 
@@ -769,7 +771,7 @@ structure Private = struct
         ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
                        FROM pset
                        WHERE pset.PsetNum = {[id]});
-        Theme.simple ("MIT 6.822: Pset " ^ show id) (Ui.seq
+        Theme.simple ("MIT 6.512: Pset " ^ show id) (Ui.seq
           (Ui.constM (fn ctx => <xml>
             <h2>Pset {[id]}</h2>
             <h3>Released: {[ps.Released]}<br/>
@@ -867,7 +869,7 @@ structure Private = struct
                                  FROM secrets
                                  LIMIT 1);
 
-        Theme.tabbed "MIT 6.822, Spring 2022, student page"
+        Theme.tabbed "MIT 6.512, Spring 2023, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
@@ -972,7 +974,7 @@ structure Private = struct
                                                    IsInstructor = False,
                                                    IsTA = False}
                                    val amAuthorized = amInstructor
-                                   val expectedSubjectNumber = "6.822"
+                                   val expectedSubjectNumber = "6.512"
                                end)
 
     fun psetGrades n u =
@@ -1224,7 +1226,7 @@ structure Private = struct
         ps <- oneRow1 (SELECT pset.Released, pset.Due, pset.Instructions
                        FROM pset
                        WHERE pset.PsetNum = {[id]});
-        Theme.simple ("MIT 6.822 Staff: Pset " ^ show id)
+        Theme.simple ("MIT 6.512 Staff: Pset " ^ show id)
         (Ui.seq
              (Ui.constM (fn ctx => <xml>
                <h2>Pset {[id]}</h2>
@@ -1309,7 +1311,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2022 Staff"
+        Theme.tabbed "MIT 6.512, Spring 2023 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1448,7 +1450,7 @@ structure Private = struct
                            <li class="list-group-item"><a link={staff r.UserName}>{[r.UserName]}</a></li>
                          </xml>);
 
-        Theme.tabbed "MIT 6.822, Spring 2022 Admin"
+        Theme.tabbed "MIT 6.512, Spring 2023 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1482,7 +1484,7 @@ end
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.822, Spring 2022"
+    Theme.tabbed "MIT 6.512, Spring 2023"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
@@ -1496,7 +1498,7 @@ val main =
                    cal))
 
 val login =
-    Theme.simple "MIT 6.822, non-MIT user login" Auth.Login.ui
+    Theme.simple "MIT 6.512, non-MIT user login" Auth.Login.ui
 
 val index = return <xml><body>
   <a link={main}>Main</a>
