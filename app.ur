@@ -975,7 +975,7 @@ structure Private = struct
                                                    IsInstructor = False,
                                                    IsTA = False}
                                    val amAuthorized = amInstructor
-                                   val expectedSubjectNumber = "6.512"
+                                   val expectedSubjectNumber = "6.5120"
                                end)
 
     fun psetGrades n u =
