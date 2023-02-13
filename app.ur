@@ -653,7 +653,7 @@ structure Ann = News.Make(struct
 val cal = Ui.seq
               (Ui.h4 <xml>
                 Lecture is in <b>2-105</b>.<br/>
-                Dustin's office hours are in <b>24-323</b> (Tuesday and Wednesday) and <b>36-155</b> (Thursday). These may move around based on early feedback from students.<br/>
+                Dustin's office hours are in <b>24-321</b> (Monday), <b>24-319</b> (Tuesday) and <b>24-323</b> (Wednesday and Thursday). These may move around based on early feedback from students.<br/>
                 Adam's office hours are in his normal office, <b>32-G842</b>.
               </xml>,
               PublicCal.ui calBounds)
