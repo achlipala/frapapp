@@ -251,7 +251,7 @@ val courseInfo =
       <table class="bs-table">
         <tr> <th>Subject number:</th> <td>6.512*</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistant:</th> <td><a href="https://jamner.net/">Dustin Jamner</a></td> </tr>
+        <tr> <th>Teaching assistants:</th> <td><a href="https://jamner.net/">Dustin Jamner</a>, <a href="https://tck.mn/">Andrew Tockman</a></td> </tr>
         <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 2-105</td> </tr>
       </table>
 
