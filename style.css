@@ -78,3 +78,7 @@ div.Calendar_item {
     border-style: solid;
     padding: 10px;
 }
+
+.nav-link {
+    cursor: pointer;
+}
