@@ -1,6 +1,6 @@
 open Bootstrap
 structure Theme = Ui.Make(Style)
-structure ThisTerm = Spring2023
+structure ThisTerm = Fall2025
 val calBounds = {FromDay = ThisTerm.regDay,
                  ToDay = ThisTerm.classesDone}
 val mailFrom = "MIT 6.512 <frap@csail.mit.edu>"
@@ -30,8 +30,6 @@ table officeHours : { OhUser : string, When : time, LengthInHours : int }
   PRIMARY KEY (When, OhUser),
   CONSTRAINT OhUser FOREIGN KEY OhUser REFERENCES user(UserName) ON UPDATE CASCADE
 
-table secrets : { RecitationsPassword : string }
-
 (* Bootstrap the database with an initial admin user. *)
 task initialize = fn () =>
   anyUsers <- oneRowE1 (SELECT COUNT( * ) > 0
@@ -42,11 +40,43 @@ task initialize = fn () =>
       dml (INSERT INTO user(Kerberos, MitId, UserName, Password, IsInstructor, IsTA, IsStudent, IsListener, HasDropped, Units, SubjectNum, SectionNum, LastName, FirstName, MiddleInitial)
            VALUES ('adamc', '', 'Adam Chlipala', NULL, TRUE, FALSE, FALSE, FALSE, FALSE, '', '', '', '', '', ''))
 
-structure Auth = MitCert.Make(struct
-                                  con kerberos = #Kerberos
-                                  con commonName = #UserName
-                                  con groups = [IsInstructor, IsTA, IsStudent, IsListener, HasDropped]
-                                  val users = user
+cookie returnTo : string
+
+structure Touchstone = struct
+    val authorize =
+        rTo <- getCookie returnTo;
+        case rTo of
+            None => error <xml>Unexpected redirect from OpenID Connect</xml>
+          | Some u => redirect (bless u)
+end
+
+structure TouchstoneAuth = OpenIdConnect.Make(struct
+                                                  val authorize_url = bless "https://okta.mit.edu/oauth2/v1/authorize"
+                                                  val access_token_url = bless "https://okta.mit.edu/oauth2/v1/token"
+                                                  val userinfo_url = bless "https://okta.mit.edu/oauth2/v1/userinfo"
+                                                  val https = True
+                                                  val onCompletion = Touchstone.authorize
+                                                  val scopeValue = Some "openid profile email"
+                                                  val https = True
+
+                                                  open AppSecrets (* brings in client ID and secret *)
+                                              end)
+
+structure AuthInfo = struct
+    con name = #UserName
+    con commonName = name
+    con kerberos = #Kerberos
+    con key = [Kerberos = _]
+    con groups = [IsInstructor, IsTA, IsStudent, IsListener]
+    con others' = _
+    con others = others' ++ [Password = option string]
+
+    constraint [name] ~ key
+    constraint ([name] ++ map (fn _ => ()) key) ~ groups
+    constraint ([name] ++ map (fn _ => ()) key ++ groups) ~ others
+
+    val users = user
+    con users_hidden_constraints = _
                                   val defaults = Some {IsInstructor = False,
                                                        IsTA = False,
                                                        IsStudent = False,
@@ -58,10 +88,60 @@ structure Auth = MitCert.Make(struct
                                                        SectionNum = "",
                                                        LastName = "",
                                                        FirstName = "",
-                                                       MiddleInitial = ""}
-                                  val allowMasquerade = Some (make [#IsInstructor] () :: [])
-                                  val requireSsl = True
-                              end)
+                                                       MiddleInitial = "",
+                                                       Password = None}
+    val allowMasquerade = Some (make [#IsInstructor] () :: [])
+
+    val requireSsl = True
+    val accessDeniedErrorMessage = <xml>Something went wrong logging in with <a href="https://ist.mit.edu/touchstone">MIT Touchstone</a>.</xml>
+
+    cookie byPassword : MitCert.password_cookie
+
+    val fls = _
+    val flg = _
+    val flo = _
+    val injs = _
+    val injo = _
+    val eqs = _
+
+    con noConstraints :: {{Unit}} = []
+    constraint noConstraints ~ users_hidden_constraints
+    constraint [kerberos] ~ [commonName]
+    constraint [Password] ~ [kerberos, commonName]
+    constraint [kerberos, commonName, Password] ~ groups
+    constraint ([kerberos, commonName, Password] ++ groups) ~ others'
+end
+
+structure Login = MitCert.AlternativeLogin(AuthInfo)
+
+structure Auth = Auth.Make(struct
+                               open AuthInfo
+
+                               val underlying =
+                                   byPass <- Login.whoami;
+                                   case byPass of
+                                       None =>
+                                       (email <- TouchstoneAuth.email;
+                                        name <- TouchstoneAuth.name;
+                                        case (email, name) of
+                                            (Some email, Some name) =>
+                                            if String.length email < 8 || String.suffix email (String.length email - 8) <> "@mit.edu" then
+                                                error <xml>Unexpected email address <tt>{[email]}</tt></xml>
+                                            else
+                                                return (Some {UserName = name, Kerberos = String.substring email {Start = 0, Len = String.length email - 8}})
+                                          | _ => return None)
+                                     | r => return r
+                           end)
+
+val requireTouchstone =
+    uo <- Auth.whoami;
+    case uo of
+        Some _ => return ()
+      | None =>
+        here <- currentUrl;
+        setCookie returnTo {Value = show here, Expires = None, Secure = True};
+        redirect (url TouchstoneAuth.authorize)
+
 
 val whoami' = s <- Auth.whoamiWithMasquerade;
     return (case s of
@@ -244,28 +324,28 @@ val courseInfo =
         <div class="container">
           <h1>Formal Reasoning About Programs</h1>
 
-          <p>A graduate course at MIT in Spring 2023</p>
+          <p>A graduate course at MIT in Fall 2025</p>
         </div>
       </div>
 
       <table class="bs-table">
         <tr> <th>Subject number:</th> <td>6.512*</td> </tr>
         <tr> <th>Instructor:</th> <td><a href="http://adam.chlipala.net/">Adam Chlipala</a></td> </tr>
-        <tr> <th>Teaching assistants:</th> <td><a href="https://jamner.net/">Dustin Jamner</a>, <a href="https://tck.mn/">Andrew Tockman</a></td> </tr>
-        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 2-105</td> </tr>
+        <tr> <th>Teaching assistant:</th> <td><a href="https://people.csail.mit.edu/paulmure/">Paul Mure</a></td> </tr>
+        <tr> <th>Class meets:</th> <td>MW 2:30-4:00, 36-156</td> </tr>
       </table>
 
       <p>* Our department at MIT is in the midst of a <a href="https://www.eecs.mit.edu/academics/subject-numbering/">global subject renumbering</a>, so the <i>official</i> number is 6.5120, ending in a zero that will be removed in a few years.</p>
 
-      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/spring23">GitHub repo with problem sets</a></h3>
+      <h3>Key links: <a href="http://adam.chlipala.net/frap/">book and related source code</a>; <a href="https://github.com/mit-frap/fall25">GitHub repo with problem sets</a></h3>
 
       <h2>What's it all about?</h2>
 
       <p><i>Briefly</i>, this course is about an approach to bringing software engineering up-to-speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
 
-      <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="http://coq.inria.fr/">the Coq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
+      <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="https://rocq-prover.org/">the Rocq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
-      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on February 6th.</p>
+      <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on September 3rd.</p>
 
       <h2>Major topics covered</h2>
 
@@ -279,7 +359,6 @@ val courseInfo =
         <tr><td>Model checking and abstraction: finitizing state spaces with clever relations</td></tr>
         <tr><td>Operational semantics: the standard approach to give meanings to programs</td></tr>
         <tr><td>Compiler verification</td></tr>
-        <!--tr><td>Abstract interpretation</td></tr-->
 
         <tr><th>Type Systems</th></tr>
         <tr><td>Lambda-calculus semantics</td></tr>
@@ -288,6 +367,7 @@ val courseInfo =
 
         <tr><th>Program Logics</th></tr>
         <tr><td>Hoare logic: an approach to verifying imperative programs</td></tr>
+        <tr><td>Symbolic execution: automating the above</td></tr>
         <tr><td>Deep embeddings, shallow embeddings, and options in between: choices for how to represent programs formally</td></tr>
         <tr><td>Separation logic: reasoning about aliasing and pointer-based data structures</td></tr>
 
@@ -310,15 +390,15 @@ val courseInfo =
 
       <h2>Mechanics</h2>
 
-      <p><b>Lectures will be back to fully in-person!</b>  Sorry, there will be no facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)  We are using MIT's experimental lecture-capture system to save video of lectures, but these will only be shared with students with specific compelling reasons for missing class (the principal one being staying at home in isolation after positive COVID tests).  We still want to encourage everyone in class to attend lecture and participate actively!</p>
+      <p><b>We're glad to be back in the era of fully in-person lectures!</b>  Sorry, there will be no facilitation of remote participation.  (Of course, based on monitoring the COVID-19 situation, MIT might still announce changed procedures, which would apply to this class.)</p>
 
       <p>Most homework assignments are mechanized proofs that are checked automatically.</p>
 
-      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Coq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Coq.  Coq examples will be explored through livecoding with as much audience participation as possible.</p>
+      <p>There are two lectures per week.  At the very beginning, we'll spend all the lecture time on basics of Rocq.  Shortly afterward, we'll switch to, each week, having one lecture on a concept in semantics and/or proofs of program correctness and one lecture on some moderate-to-advanced feature of Rocq.  Rocq examples will be explored through livecoding with as much audience participation as possible.</p>
 
       <p>Grades are based entirely on <i>problem sets</i> (mostly graded by the machines), and a new one is released right after each Wednesday lecture, due a week later (or a little earlier, usually starts of class periods; see each assignment's posting for details).  Late problem-set turn-in is accepted, but 20% is subtracted from the grade for every day late (that is, <tt>adjusted_percentage = baseline_percentage - 20 * days_late</tt>), starting one second after the posted deadline, so don't bet your grade on details of the server's clock!  (In other words, any fractional late time is rounded up to a whole day, before applying the 20%-per-day penalty.)  At the end of term, letter-grade cutoffs will be determined (per <a href="https://facultygovernance.mit.edu/rules-and-regulations#2-60-grades">MIT rules</a>) by analyzing how hard the assignments turned out to be, but the cutoffs won't be any less favorable than 90% for A, 80% for B, 70% for C, 60% for D.</p>
 
-      <p>It takes a while to internalize all the pro tips for writing Coq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i> (also back to in-person only), in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
+      <p>It takes a while to internalize all the pro tips for writing Rocq proofs productively.  It really helps to have experts nearby to ask in person.  For that reason, we will also have copious <i>office hours</i> (also in-person only), in the neighborhood of 10 hours per week.  Course staff members will be around, and we also encourage students to help each other at these sessions.  We'll take a poll on the best times for office hours, but the default theory is that the day before an assignment is due and the day after it is released are the best times.</p>
 
       <p><b>Academic-integrity guidelines:</b> Learning to drive a proof assistant is hard work, and it's valuable to be able to ask for help from your classmates.  For that reason, we allow asking for help from classmates, not just the course staff, with no particular acknowledgment in turned-in solutions.  However, the requirement is that <i>you have entered your problem-set code/proofs yourself, without someone else looking over your shoulder telling you more or less what to type at every stage</i>.  Use your judgment about exactly which interaction styles will stay compatible with this rule.  You'll generally learn more as you spend time working through the parts of assignments where you don't wind up stuck on something, and it's generally valuable to seek help (from classmates or course staff) when you're stuck.</p>
 
@@ -326,20 +406,20 @@ val courseInfo =
 
       <h2>Prerequisites</h2>
 
-      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.120 (formerly 6.042) and 6.102 (formerly 6.031) should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Coq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.511 [formerly 6.820] also provides lightning-speed introductions to those languages.)</p>
+      <p>Two main categories of prior knowledge are assumed: <i>mathematical foundations of computer science, including rigorous proofs with induction</i>; and <i>intermediate-level programming experience, including familiarity with concepts like higher-order functions, pointers, and multithreading</i>.  MIT's 6.120 (formerly 6.042) and 6.102 (formerly 6.031) should respectively satisfy those requirements, but many other ways of coming by this core knowledge should also be fine.  We'll start off pretty quickly with functional programming in Rocq, as our main vehicle for expressing programs and their specifications.  Many students find it unnecessary to have studied functional programming beforehand, but others appreciate learning a bit about Haskell or OCaml on their own first.  (6.511 [formerly 6.820] also provides lightning-speed introductions to those languages.)</p>
 
       <h2>Suggested reading</h2>
 
       <p>The main source is <a href="http://adam.chlipala.net/frap/">the book <i>Formal Reasoning About Programs</i></a>, which is in decent shape from the prior offering of this subject, but which will likely have small changes made as we go.</p>
 
-      <p>The course is intended to be self-contained, and notes and example Coq code will be in <a href="https://github.com/achlipala/frap">the book's GitHub repo</a>.  We'll also be using a custom Coq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
+      <p>The course is intended to be self-contained, and notes and example Rocq code will be in <a href="https://github.com/achlipala/frap">the book's GitHub repo</a>.  We'll also be using a custom Rocq library designed to present a relatively small set of primitive commands to be learned.  However, the following popular sources may be helpful supplements.</p>
 
-      <h3>The Coq proof assistant</h3>
+      <h3>The Rocq proof assistant</h3>
 
       <ul>
-        <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Coq at a more advanced level</li>
-        <li><a href="https://www.labri.fr/perso/casteran/CoqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Coq</li>
-        <li><a href="https://softwarefoundations.cis.upenn.edu/"><i>Software Foundations</i></a>, a popular introduction to Coq that covers ideas similar to the ones in this course, at a slower pace</li>
+        <li><a href="http://adam.chlipala.net/cpdt/"><i>Certified Programming with Dependent Types</i></a>, the instructor's book introducing Rocq at a more advanced level</li>
+        <li><a href="https://www.labri.fr/perso/casteran/RocqArt/"><i>Interactive Theorem Proving and Program Development (Coq'Art)</i></a>, the first book about Rocq</li>
+        <li><a href="https://softwarefoundations.cis.upenn.edu/"><i>Software Foundations</i></a>, a popular introduction to Rocq that covers ideas similar to the ones in this course, at a slower pace</li>
       </ul>
 
       <h3>Semantics and program proof</h3>
@@ -652,8 +732,8 @@ structure Ann = News.Make(struct
 
 val cal = Ui.seq
               (Ui.h4 <xml>
-                Lecture is in <b>2-105</b>.<br/>
-                Dustin's office hours are in <b>24-321</b> (Monday), <b>34-304</b> (Tuesday) and <b>24-323</b> (Wednesday and Thursday). These may move around based on early feedback from students.<br/>
+                Lecture is in <b>36-156</b>.<br/>
+                <!--Dustin's office hours are in <b>24-321</b> (Monday), <b>34-304</b> (Tuesday) and <b>24-323</b> (Wednesday and Thursday). These may move around based on early feedback from students.<br/>-->
                 Adam's office hours are in his normal office, <b>32-G842</b>.
               </xml>,
               PublicCal.ui calBounds)
@@ -667,17 +747,6 @@ structure Private = struct
     val staffPerm =
         b <- amStaff;
         return {Add = b, Delete = b, Modify = b}
-
-    structure EditSecrets = EditableTable.Make(struct
-                                                   val tab = secrets
-                                                   val labels = {RecitationsPassword = "Recitations Password"}
-
-                                                   val permission = adminPerm
-                                                   fun onAdd _ = return ()
-                                                   fun onDelete _ = return ()
-                                                   fun onModify _ = return ()
-                                                   val title = "secrets"
-                                               end)
 
     structure EditUser = EditableTable.Make(struct
                                                 val tab = user
@@ -698,10 +767,14 @@ structure Private = struct
                                                               MiddleInitial = "MI"}
 
                                                 val permission = adminPerm
+                                                val title = "user"
+                                                structure CW = ChangeWatcher.RealChangeWatcher(struct
+                                                                                                   val title = "user"
+                                                                                               end)
                                                 fun onAdd _ = return ()
                                                 fun onDelete _ = return ()
                                                 fun onModify _ = return ()
-                                                val title = "user"
+                                                val pageSize = 100
                                             end)
 
     structure EditExtension = EditableTable.Make(struct
@@ -715,10 +788,14 @@ structure Private = struct
                                                                     Until = _}
 
                                                      val permission = adminPerm
+                                                     val title = "extension"
+                                                     structure CW = ChangeWatcher.RealChangeWatcher(struct
+                                                                                                        val title = "extension"
+                                                                                                    end)
                                                      fun onAdd _ = return ()
                                                      fun onDelete _ = return ()
                                                      fun onModify _ = return ()
-                                                     val title = "extension"
+                                                     val pageSize = 100
                                                  end)
 
     structure EditPossOh = EditableTable.Make(struct
@@ -726,10 +803,14 @@ structure Private = struct
                                                   val labels = {Time = "Time"}
 
                                                   val permission = adminPerm
+                                                  val title = "possibleOfficeHoursTime"
+                                                  structure CW = ChangeWatcher.RealChangeWatcher(struct
+                                                                                                     val title = "possibleOfficeHoursTime"
+                                                                                                 end)
                                                   fun onAdd _ = return ()
                                                   fun onDelete _ = return ()
                                                   fun onModify _ = return ()
-                                                  val title = "possibleOfficeHoursTime"
+                                                  val pageSize = 100
                                               end)
 
     structure OhPoll = ClosedBallot.Make(struct
@@ -830,6 +911,8 @@ structure Private = struct
         PsetForum.ui {PsetNum = psr.PsetNum})
 
     fun student masqAs =
+        requireTouchstone;
+        
         (case masqAs of
              "" => Auth.unmasquerade
            | _ => Auth.masqueradeAs masqAs);
@@ -866,21 +949,14 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPset r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        secrets <- oneOrNoRows1 (SELECT *
-                                 FROM secrets
-                                 LIMIT 1);
-
-        Theme.tabbed "MIT 6.512, Spring 2023, student page"
+        Theme.tabbed "MIT 6.512, Fall 2025, student page"
         ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
           Ui.seq (Ui.h4 <xml>These times are listed for particular days in a particular week, but please interpret the poll as a question about your general weekly schedule.</xml>,
                  OhPoll.ui {Ballot = (), Voter = key})),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Todo",
           StudentTodo.OneUser.ui u),
          (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
-          Ui.seq (Ui.const (case secrets of
-                                None => <xml></xml>
-                              | Some r => <xml><h5>The password for <a href="http://people.csail.mit.edu/lamanda/recitations">recitation videos</a> is: <tt>{[r.RecitationsPassword]}</tt></h5></xml>),
-                  cal)),
+          cal),
          (Some "News",
           Ann.ui),
 
@@ -904,7 +980,7 @@ structure Private = struct
             <hr/>
             <h2>Forum</h2>
           </xml>,
-                  LectureForum.ui {LectureNum = lecr.LectureNum})),
+              LectureForum.ui {LectureNum = lecr.LectureNum})),
 
          (Ui.when (st >= make [#PollingAboutOfficeHours] ()) "Pset Files",
           PsetSpec.AllFilesAllKeys.ui),
@@ -1069,8 +1145,9 @@ structure Private = struct
                                       end)
 
     structure TimeSpent = SimpleQuery.Make(struct
+                                               con fs = [Avg = option float] ++ _
                                                val submission = PsetSub.submission
-
+                                                                
                                                val query = (SELECT AVG(submission.Hours) AS Avg, MAX(submission.Hours) AS Max, MIN(submission.Hours) AS Min, COUNT( * ) AS Count, submission.PsetNum AS PsetNum
                                                             FROM (SELECT submission.PsetNum AS PsetNum, MAX(submission.Hours) AS Hours
                                                                   FROM submission
@@ -1086,6 +1163,10 @@ structure Private = struct
                                                              Min = "Minimum",
                                                              Count = "Count",
                                                              PsetNum = "Pset#"}
+
+                                               structure CW = ChangeWatcher.RealChangeWatcher(struct
+                                                                                                  val title = "submission"
+                                                                                              end)
                                            end)
 
     structure DetailedTime : Ui.S0 = struct
@@ -1243,6 +1324,8 @@ structure Private = struct
               PsetSpec.AllFilesAllUsers.ui {PsetNum = id}))
 
     fun staff masqAs =
+        requireTouchstone;
+        
         (case masqAs of
              "" => Auth.unmasquerade
            | _ => Auth.masqueradeAs masqAs);
@@ -1312,7 +1395,7 @@ structure Private = struct
                              ORDER BY pset.Due)
                             (fn r => <xml><tr><td><a link={oldPsetStaff r.PsetNum}>{[r]}</a></td></tr></xml>);
 
-        Theme.tabbed "MIT 6.512, Spring 2023 Staff"
+        Theme.tabbed "MIT 6.512, Fall 2025 Staff"
                      ((Ui.when (st = make [#PollingAboutOfficeHours] ()) "Poll on Favorite Office-Hours Times",
                        OhPoll.ui {Ballot = (), Voter = key}),
                       (Ui.when (st >= make [#AssigningFinalGrades] ()) "Final Grades",
@@ -1451,7 +1534,7 @@ structure Private = struct
                            <li class="list-group-item"><a link={staff r.UserName}>{[r.UserName]}</a></li>
                          </xml>);
 
-        Theme.tabbed "MIT 6.512, Spring 2023 Admin"
+        Theme.tabbed "MIT 6.512, Fall 2025 Admin"
                      ((Some "Lifecycle",
                        Smu.ui),
                       (Some "Calendar",
@@ -1476,30 +1559,27 @@ structure Private = struct
                          <ul class="list-group">
                            {smasq}
                          </ul>
-                       </xml>),
-                      (Some "Secrets",
-                       EditSecrets.ui))
+                       </xml>))
 
 end
 
 val main =
     st <- Sm.current;
 
-    Theme.tabbed "MIT 6.512, Spring 2023"
+    Theme.tabbed "MIT 6.512, Fall 2025"
                  ((Some "Course Info",
                    Ui.seq (Ui.const (if st < make [#PollingAboutOfficeHours] () then
                                          <xml></xml>
                                      else
                                          <xml><p>
                                            <a class="btn btn-primary btn-lg" link={Private.student ""}>Go to student portal</a>
-                                           (requires an <a href="https://ist.mit.edu/certificates">MIT client certificate</a>)
                                          </p></xml>),
                            courseInfo)),
                   (Ui.when (st >= make [#ReleaseCalendar] ()) "Calendar",
                    cal))
 
 val login =
-    Theme.simple "MIT 6.512, non-MIT user login" Auth.Login.ui
+    Theme.simple "MIT 6.512, non-MIT user login" Login.ui
 
 val index = return <xml><body>
   <a link={main}>Main</a>

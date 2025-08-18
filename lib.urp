@@ -1,5 +1,6 @@
 library style
 library $/email
+library $/world
 rewrite relation App/*
 rewrite url App/*
 rewrite style App/*
@@ -13,6 +14,7 @@ safeGet Private/oldLab
 safeGet Private/oldPsetStaff
 safeGet PsetSub/retrieve
 safeGet Private/Grades/csv
+safeGet TouchstoneAuth/authorize
 alwaysInline App/Sm/next
 alwaysInline Auth/variantToExp
 alwaysInline Auth/inGroup
@@ -23,4 +25,5 @@ allow url http://*
 allow url https://*
 allow url mailto:*
 
+appSecrets
 app
