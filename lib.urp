@@ -24,6 +24,7 @@ allow mime text/x-verilog
 allow url http://*
 allow url https://*
 allow url mailto:*
+allow url /*
 
 appSecrets
 app

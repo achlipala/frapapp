@@ -1050,6 +1050,7 @@ structure Private = struct
                                end)
 
     fun psetGrades n u =
+        requireTouchstone;
         requireStaff;
         Theme.simple ("Grading Pset #" ^ show n ^ ", " ^ u)
                      (Ui.seq
@@ -1509,6 +1510,7 @@ structure Private = struct
                        OhPoll.ui {Ballot = (), Voter = key}))
 
     val admin =
+        requireTouchstone;
         requireInstructor;
         tm <- now;
         st <- Sm.current;
