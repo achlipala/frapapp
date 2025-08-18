@@ -18,7 +18,7 @@ val css =
      Dropzone = bless "https://unpkg.com/dropzone@5/dist/min/dropzone.min.css",
      Upo = bless "/style.css"}
 
-val icon = Some (bless "https://www.eecs.mit.edu/sites/all/themes/adaptivetheme/miteecs_adaptive_production/favicon.ico")
+val icon = Some (bless "https://www.eecs.mit.edu/wp-content/uploads/2021/06/cropped-cropped-favicon-32x32.png")
 
 val defaultOnLoad = return ()
 val themeColor = None
@@ -36,5 +36,5 @@ fun wrapNav url titl x = <xml>
 </xml>
 
 fun wrapBody b = <xml>
-  <main role="main" class="container">{b}</main>
+  <main role="main">{b}</main>
 </xml>

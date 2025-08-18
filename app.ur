@@ -320,13 +320,8 @@ structure PsetSpec = Submission.Make(struct
 
 val courseInfo =
     Ui.const <xml>
-      <div class="jumbotron">
-        <div class="container">
-          <h1>Formal Reasoning About Programs</h1>
-
-          <p>A graduate course at MIT in Fall 2025</p>
-        </div>
-      </div>
+      <h1>Formal Reasoning About Programs</h1>
+      <p class="lead">A graduate course at MIT in Fall 2025</p>
 
       <table class="bs-table">
         <tr> <th>Subject number:</th> <td>6.512*</td> </tr>
@@ -343,7 +338,7 @@ val courseInfo =
 
       <p><i>Briefly</i>, this course is about an approach to bringing software engineering up-to-speed with more traditional engineering disciplines, providing a mathematical foundation for rigorous analysis of realistic computer systems.  As civil engineers apply their mathematical canon to reach high certainty that bridges will not fall down, the software engineer should apply a different canon to argue that programs behave properly.  As other engineering disciplines have their computer-aided-design tools, computer science has <i>proof assistants</i>, IDEs for logical arguments.  We will learn how to apply these tools to certify that programs behave as expected.</p>
 
-      <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="https://rocq-prover.org/">the Rocq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.820</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
+      <p><i>More specifically</i>: Introductions to two intertangled subjects: <b><a href="https://rocq-prover.org/">the Rocq proof assistant</a>, a tool for machine-checked mathematical theorem proving</b>; and <b>formal logical reasoning about the correctness of programs</b>.  The latter category overlaps significantly with MIT's <a href="http://stellar.mit.edu/S/course/6/fa15/6.820/">6.511 [formerly 6.820]</a>, but we will come to appreciate the material at a different level, by focusing on machine-checked proofs, both of the soundness of general reasoning techniques and of the correctness of particular programs.</p>
 
       <p>We welcome participation by graduate and undergraduate students from MIT and other local universities, as well as other auditors interested in jumping into this material.  Per MIT's academic calendar, the first class meeting will be on September 3rd.</p>
 

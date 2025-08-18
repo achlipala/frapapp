@@ -25,7 +25,7 @@ script https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/timegrid/main.m
 allow url https://unpkg.com/dropzone@5/dist/min/dropzone.min.css
 script https://unpkg.com/dropzone@5/dist/dropzone.js
 file /style.css style.css
-allow url https://www.eecs.mit.edu/sites/all/themes/adaptivetheme/miteecs_adaptive_production/favicon.ico
+allow url https://www.eecs.mit.edu/wp-content/uploads/2021/06/cropped-cropped-favicon-32x32.png
 library $/upo/navbar
 
 style
