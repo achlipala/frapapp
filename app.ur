@@ -806,6 +806,8 @@ structure Private = struct
                                                   fun onDelete _ = return ()
                                                   fun onModify _ = return ()
                                                   val pageSize = 100
+
+                                                  val widgets = {Time = Widget.timebox}
                                               end)
 
     structure OhPoll = ClosedBallot.Make(struct
